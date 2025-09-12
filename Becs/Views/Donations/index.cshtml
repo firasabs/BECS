@@ -1,0 +1,55 @@
+@model Becs.Models.DonationInput
+@{
+    ViewData["Title"] = "קליטת תרומות";
+    var units = (IEnumerable<Becs.Models.BloodUnit>)ViewBag.Units;
+}
+<div class="container py-4" dir="rtl">
+    <h3>קליטת תרומות</h3>
+    @if (TempData["ok"] is string ok) { <div class="alert alert-success">@ok</div> }
+    <form method="post" asp-action="Create" class="row g-2">
+        <div class="col-auto">
+            <label class="form-label">סוג דם</label>
+            <select asp-for="ABO" class="form-select">
+                <option>O</option><option>A</option><option>B</option><option>AB</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label">Rh</label>
+            <select asp-for="RhSign" class="form-select">
+                <option>+</option><option>-</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label">תאריך תרומה</label>
+            <input asp-for="DonationDate" type="date" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <label class="form-label">ת״ז תורם</label>
+            <input asp-for="DonorId" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <label class="form-label">שם מלא</label>
+            <input asp-for="DonorName" class="form-control" />
+        </div>
+        <div class="col-12 mt-2">
+            <button class="btn btn-primary">קלוט</button>
+        </div>
+    </form>
+    <hr />
+    <h5>מלאי קיים</h5>
+    <table class="table table-striped">
+        <thead><tr><th>מזהה</th><th>סוג דם</th><th>תאריך</th><th>ת״ז</th><th>שם</th></tr></thead>
+        <tbody>
+        @foreach (var u in units)
+        {
+            <tr>
+                <td>@u.Id</td>
+                <td>@(u.Type.ABO)@( (u.Type.Rh==Becs.Models.Rh.Neg) ? "-" : "+" )</td>
+                <td>@u.DonationDate.ToString("yyyy-MM-dd")</td>
+                <td>@u.DonorId</td>
+                <td>@u.DonorName</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

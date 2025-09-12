@@ -1,0 +1,82 @@
+@model Becs.Models.RoutineIssueInput
+@{
+    ViewData["Title"] = "ניפוק שגרה";
+    var chosen = ViewBag.Chosen as List<Becs.Models.BloodUnit>;
+    var suggestions = ViewBag.Suggestions as List<(string bt, int count)>;
+}
+<div class="container py-4" dir="rtl">
+    @if (TempData["ok"] is string ok) { <div class="alert alert-success">@ok</div> }
+    <h3>ניפוק לחדרי ניתוח/טראומה (שגרה)</h3>
+    <form method="post" class="row g-2">
+        <div class="col-auto">
+            <label class="form-label">סוג ABO</label>
+            <select asp-for="ABO" class="form-select">
+                <option>O</option><option>A</option><option>B</option><option>AB</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label">Rh</label>
+            <select asp-for="RhSign" class="form-select">
+                <option>+</option><option>-</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <label class="form-label">כמות (מנות)</label>
+            <input asp-for="Quantity" class="form-control" type="number" min="1" />
+        </div>
+        <div class="col-12 mt-2">
+            <button class="btn btn-primary">בדוק ונפק</button>
+        </div>
+    </form>
+    <hr />
+    @if (chosen != null)
+    {
+        if (chosen.Count == 0)
+        {
+            <div class="alert alert-warning">
+                אין מלאי תואם לבקשה.
+                @if (suggestions != null && suggestions.Count > 0)
+                {
+                    <div>חלופות זמינות (סוג: כמות):</div>
+                    <ul>
+                        @foreach (var s in suggestions) { <li>@s.bt : @s.count</li> }
+                    </ul>
+                }
+            </div>
+        }
+        else
+        {
+            <h5>נמצאו יחידות תואמות:</h5>
+            <form method="post" asp-action="ConfirmIssue">
+                <table class="table table-bordered align-middle">
+                    <thead><tr><th></th><th>מזהה</th><th>סוג</th><th>תאריך</th><th>ת״ז</th><th>שם</th></tr></thead>
+                    <tbody>
+                    @foreach (var u in chosen)
+                    {
+                        var sign = (u.Type.Rh==Becs.Models.Rh.Neg) ? "-" : "+";
+                        <tr>
+                            <td><input type="checkbox" name="ids" value="@u.Id" checked /></td>
+                            <td>@u.Id</td>
+                            <td>@u.Type.ABO@sign</td>
+                            <td>@u.DonationDate.ToString("yyyy-MM-dd")</td>
+                            <td>@u.DonorId</td>
+                            <td>@u.DonorName</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                <button class="btn btn-success">אשר ונפק</button>
+            </form>
+
+            @if (suggestions != null && suggestions.Count > 0)
+            {
+                <div class="mt-3">
+                    <strong>חלופות זמינות נוספות (לפי שכיחות):</strong>
+                    <ul>
+                        @foreach (var s in suggestions) { <li>@s.bt : @s.count</li> }
+                    </ul>
+                </div>
+            }
+        }
+    }
+</div>

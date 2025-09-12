@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "ניפוק אר״ן";
+}
+<div class="container py-4" dir="rtl">
+    @if (TempData["err"] is string err) { <div class="alert alert-danger">@err</div> }
+    @if (TempData["ok"] is string ok) { <div class="alert alert-success">@ok</div> }
+
+    <h3>ניפוק אר״ן (O− בלבד)</h3>
+    <p>במצב אר״ן מנפיקים אך ורק O− (תורם אוניברסלי ל-RBC).</p>
+    <form method="post" asp-action="EmergencyIssue">
+        <button class="btn btn-danger">נפק מקסימום O− עכשיו</button>
+    </form>
+</div>
