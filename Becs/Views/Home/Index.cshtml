@@ -1,15 +1,49 @@
 ﻿@{
     ViewData["Title"] = "BECS";
 }
-<div class="container py-4">
-    <h2>BECS — Blood Establishment Computer Software (Demo)</h2>
-    <p>בחרו מודול:</p>
-    <ul>
-        <li><a href="/Donations/Index">קליטת תרומות</a></li>
-        <li><a href="/Issue/Routine">ניפוק לחדרי ניתוח/טראומה (שגרה)</a></li>
-        <li><a href="/Issue/Emergency">ניפוק אר״ן (O-)</a></li>
-    </ul>
-    <hr />
-    <p><strong>הסבר:</strong> בשגרה המערכת תעדיף התאמה מדויקת, ואם חסר תציע חלופות תואמות ממלאי לפי שכיחות גבוהה יותר,
-        כדי לשמר סוגים נדירים (בעיקר O−) למצבי חירום. באר״ן מנפקים O− בלבד כי זה התורם האוניברסלי ל-RBC.</p>
+<div class="row g-4">
+    <div class="col-12">
+        <div class="section-card p-4">
+            <h2 class="mb-2">BECS — מערכת ניהול בנק דם (Demo)</h2>
+            <p class="text-secondary mb-0">
+                בחרו מודול: קליטת תרומות, ניפוק שגרה (עם חלופות לפי התאימות והנדירות), או ניפוק אר״ן (O− בלבד).
+            </p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <a class="text-decoration-none" href="/Donations/Index">
+            <div class="section-card p-4 h-100 hover-shadow">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-box-arrow-in-down fs-4 text-primary"></i>
+                    <h5 class="mb-0">קליטת תרומות</h5>
+                </div>
+                <p class="text-secondary">רישום מנות: סוג דם, תאריך, ת״ז ושם תורם.</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-4">
+        <a class="text-decoration-none" href="/Issue/Routine">
+            <div class="section-card p-4 h-100">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-truck fs-4 text-success"></i>
+                    <h5 class="mb-0">ניפוק שגרה</h5>
+                </div>
+                <p class="text-secondary">בדיקת התאמה, ניפוק, והצגת חלופות לפי שכיחות.</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-4">
+        <a class="text-decoration-none" href="/Issue/Emergency">
+            <div class="section-card p-4 h-100">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-exclamation-triangle fs-4 text-danger"></i>
+                    <h5 class="mb-0">ניפוק אר״ן</h5>
+                </div>
+                <p class="text-secondary">הוצאת מקסימום O− מיידית או שגיאה אם חסר.</p>
+            </div>
+        </a>
+    </div>
 </div>

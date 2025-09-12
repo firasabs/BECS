@@ -1,22 +1,33 @@
-html {
-  font-size: 14px;
+:root{
+  --bes-red:#e63946;
+  --bes-green:#2a9d8f;
+  --bes-amber:#ffb703;
+  --bes-blue:#1d3557;
+  --bes-muted:#6c757d;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+.bg-body{ background-color:#f8f9fb; }
+
+/* Cards & sections */
+.section-card{
+  background:#fff; border:1px solid rgba(0,0,0,.06);
+  border-radius:.75rem; box-shadow:0 8px 30px rgba(0,0,0,.04);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* Blood-type “pill” */
+.bt-pill{
+  display:inline-flex; align-items:center; gap:.25rem;
+  padding:.15rem .5rem; border-radius:999px; font-weight:600;
+  border:1px solid rgba(0,0,0,.1);
 }
+.bt-pill.bt-o{ color:#b23a48; background:#fdecef; }
+.bt-pill.bt-a{ color:#1d3557; background:#e8f0ff; }
+.bt-pill.bt-b{ color:#6a1b9a; background:#f1e6ff; }
+.bt-pill.bt-ab{ color:#0f5132; background:#e6fff2; }
+.bt-pill .rh{ opacity:.7; font-weight:500; }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
+/* Tables */
+.table thead th{ background:#fafbff; color:#495057; }
 
-body {
-  margin-bottom: 60px;
-}
+/* Form helpers */
+.form-hint{ font-size:.9rem; color:#6b6b6b; }

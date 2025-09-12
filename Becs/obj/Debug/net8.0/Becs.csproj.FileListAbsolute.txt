@@ -28,3 +28,4 @@
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/obj/Debug/net8.0/Becs.pdb
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/obj/Debug/net8.0/Becs.genruntimeconfig.cache
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/obj/Debug/net8.0/ref/Becs.dll
+/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/obj/Debug/net8.0/Becs.sourcelink.json

@@ -1,49 +1,74 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@{
+    var title = ViewData["Title"] as string ?? "BECS";
+}
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - Becs</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
-    <link rel="stylesheet" href="~/Becs.styles.css" asp-append-version="true"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title · BECS</title>
+
+    <!-- Bootstrap 5.3 + RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons (for small pictograms) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="~/css/site.css" rel="stylesheet" />
 </head>
-<body>
-<header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Becs</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                    </li>
-                </ul>
+<body class="bg-body">
+<header class="border-bottom bg-white">
+    <nav class="navbar navbar-expand-lg container">
+        <a class="navbar-brand fw-bold text-primary" href="/"><i class="bi bi-droplet-half me-1"></i>BECS</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="topNav" class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="/Donations/Index"><i class="bi bi-box-arrow-in-down"></i> קליטת תרומות</a></li>
+                <li class="nav-item"><a class="nav-link" href="/Issue/Routine"><i class="bi bi-truck"></i> ניפוק שגרה</a></li>
+                <li class="nav-item"><a class="nav-link" href="/Issue/Emergency"><i class="bi bi-exclamation-triangle"></i> ניפוק אר״ן</a></li>
+            </ul>
+            <div class="d-none d-lg-block">
+                <span class="badge text-bg-light border"><i class="bi bi-shield-lock me-1"></i> Demo</span>
             </div>
         </div>
     </nav>
 </header>
-<div class="container">
-    <main role="main" class="pb-3">
-        @RenderBody()
-    </main>
-</div>
 
-<footer class="border-top footer text-muted">
-    <div class="container">
-        &copy; 2025 - Becs - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+<main class="container py-4">
+    @RenderBody()
+</main>
+
+<footer class="border-top py-3">
+    <div class="container small text-secondary">
+        © @DateTime.Now.Year · BECS Demo · בנק דם — אבטיפוס
     </div>
 </footer>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-@await RenderSectionAsync("Scripts", required: false)
+
+<!-- Toast container (TempData messages) -->
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
+    @if (TempData["ok"] is string ok)
+    {
+        <div class="toast align-items-center text-bg-success border-0 show" role="alert">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi bi-check-circle me-1"></i>@ok</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    }
+    @if (TempData["err"] is string err)
+    {
+        <div class="toast align-items-center text-bg-danger border-0 show" role="alert">
+            <div class="d-flex">
+                <div class="toast-body"><i class="bi bi-exclamation-octagon me-1"></i>@err</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    }
+</div>
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@RenderSection("Scripts", required: false)
 </body>
 </html>

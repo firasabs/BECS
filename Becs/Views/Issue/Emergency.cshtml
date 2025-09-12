@@ -1,13 +1,27 @@
 @{
     ViewData["Title"] = "ניפוק אר״ן";
+    var countONeg = ViewBag.ONegCount is int c ? c : -1;
 }
-<div class="container py-4" dir="rtl">
-    @if (TempData["err"] is string err) { <div class="alert alert-danger">@err</div> }
-    @if (TempData["ok"] is string ok) { <div class="alert alert-success">@ok</div> }
+<div class="row g-4" dir="rtl">
+    <div class="col-12">
+        <div class="section-card p-4">
+            <h3 class="mb-2"><i class="bi bi-exclamation-triangle text-danger me-1"></i> ניפוק אר״ן (O− בלבד)</h3>
+            <p class="text-secondary mb-3">במצב אר״ן מנפיקים אך ורק <strong>O−</strong> (תורם אוניברסלי ל-RBC).</p>
 
-    <h3>ניפוק אר״ן (O− בלבד)</h3>
-    <p>במצב אר״ן מנפיקים אך ורק O− (תורם אוניברסלי ל-RBC).</p>
-    <form method="post" asp-action="EmergencyIssue">
-        <button class="btn btn-danger">נפק מקסימום O− עכשיו</button>
-    </form>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="badge text-bg-light border p-2">
+                    <i class="bi bi-clipboard2-pulse me-1"></i>
+                    מלאי O− זמין כעת:
+                    <span class="fw-bold @(countONeg>0 ? "text-success" : "text-danger")">@((countONeg<0) ? "—" : countONeg)</span>
+                </div>
+            </div>
+
+            <form method="post" asp-action="EmergencyIssue">
+                <button class="btn btn-danger btn-lg">
+                    <i class="bi bi-lightning-charge me-1"></i> נפק מקסימום O− עכשיו
+                </button>
+                <span class="form-hint ms-2">במידה ואין מלאי — תוצג שגיאה.</span>
+            </form>
+        </div>
+    </div>
 </div>

@@ -1,7 +1,7 @@
 using Becs.Models;
 using Becs.Services;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Linq;
 namespace Becs.Controllers;
 
 public class IssueController : Controller
@@ -14,7 +14,6 @@ public class IssueController : Controller
         ViewBag.Result = null;
         return View(new RoutineIssueInput());
     }
-
     [HttpPost]
     public IActionResult Routine(RoutineIssueInput input)
     {
@@ -45,7 +44,10 @@ public class IssueController : Controller
 
     public IActionResult Emergency()
     {
-        ViewBag.Issued = null;
+        var svc = _svc; // already injected
+        // Count O- in stock for UX
+        var oNeg = svc.AllUnits().Count(u => u.Type.ABO == "O" && u.Type.Rh == Becs.Models.Rh.Neg);
+        ViewBag.ONegCount = oNeg;
         return View();
     }
 
@@ -53,14 +55,8 @@ public class IssueController : Controller
     public IActionResult EmergencyIssue()
     {
         var issued = _svc.IssueEmergencyONeg();
-        if (issued.Count == 0)
-        {
-            TempData["err"] = "אין מלאי O-! דרוש טיפול מיידי.";
-        }
-        else
-        {
-            TempData["ok"] = $"נופקו {issued.Count} מנות O-: {string.Join(", ", issued.Select(u => u.Id))}";
-        }
+        if (issued.Count == 0) TempData["err"] = "אין מלאי O-! דרוש טיפול מיידי.";
+        else TempData["ok"]  = $"נופקו {issued.Count} מנות O-: {string.Join(", ", issued.Select(u => u.Id))}";
         return RedirectToAction(nameof(Emergency));
     }
 }
