@@ -1,8 +1,8 @@
 @model Becs.Models.RoutineIssueInput
 @{
     ViewData["Title"] = "ניפוק שגרה";
-    var chosen = ViewBag.Chosen as List<Becs.Models.BloodUnit>;
-    var suggestions = ViewBag.Suggestions as List<(string bt, int count)>;
+    var chosen = ViewBag.Chosen as List<Becs.Models.BloodUnitVm>;
+    var suggestions = ViewBag.Suggestions as List<Becs.Models.AltSuggestion>;
 }
 <div class="row g-4" dir="rtl">
     <div class="col-12">
@@ -14,7 +14,9 @@
                 <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1"></i> בדקו את הערכים בטופס.</div>
             }
 
-            <form method="post" class="row g-3">
+            <!-- IMPORTANT: make this a tag-helper form -->
+            <form method="post" asp-action="Routine" class="row g-3">
+                @Html.AntiForgeryToken()
                 <div class="col-6 col-md-3">
                     <label class="form-label">סוג ABO</label>
                     <select asp-for="ABO" class="form-select">
@@ -54,9 +56,9 @@
                                 @foreach (var s in suggestions)
                                 {
                                     <span class="badge text-bg-light border">
-                    <i class="bi bi-droplet-half me-1"></i>@s.bt
-                                        <span class="ms-1 text-secondary">(@s.count)</span>
-                  </span>
+                                        <i class="bi bi-droplet-half me-1"></i>@s.Bt
+                                        <span class="ms-1 text-secondary">(@s.Count)</span>
+                                    </span>
                                 }
                             </div>
                         }
@@ -66,20 +68,27 @@
                 {
                     <h5 class="mb-3">נמצאו יחידות תואמות</h5>
                     <form method="post" asp-action="ConfirmIssue">
+                        @Html.AntiForgeryToken()
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle">
                                 <thead><tr><th></th><th>מזהה</th><th>סוג</th><th>תאריך</th><th>ת״ז</th><th>שם</th></tr></thead>
                                 <tbody>
                                 @foreach (var u in chosen)
                                 {
-                                    var rh = (u.Type.Rh==Becs.Models.Rh.Neg) ? "-" : "+";
-                                    var cls = u.Type.ABO switch { "O"=>"bt-o","A"=>"bt-a","B"=>"bt-b","AB"=>"bt-ab", _=>"" };
+                                    var cls = u.ABO switch { "O"=>"bt-o","A"=>"bt-a","B"=>"bt-b","AB"=>"bt-ab", _=>"" };
                                     <tr>
-                                        <td class="text-center"><input type="checkbox" name="ids" value="@u.Id" checked /></td>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="ids" value="@u.Id" checked />
+                                        </td>
                                         <td class="text-secondary">@u.Id</td>
-                                        <td><span class="bt-pill @cls"><i class="bi bi-droplet-half"></i><span class="fw-bold">@u.Type.ABO</span><span class="rh">@rh</span></span></td>
-                                        <td>@u.DonationDate:yyyy-MM-dd</td>
-                                        <td class="text-monospace">@u.DonorId</td>
+                                        <td>
+                                            <span class="bt-pill @cls">
+                                                <i class="bi bi-droplet-half"></i>
+                                                <span class="fw-bold">@u.ABO</span><span class="rh">@u.Rh</span>
+                                            </span>
+                                        </td>
+                                        <td>@u.DonationDate.ToString("yyyy-MM-dd")</td>
+                                        <td class="font-monospace">@u.DonorId</td>
                                         <td>@u.DonorName</td>
                                     </tr>
                                 }
@@ -97,9 +106,9 @@
                                 @foreach (var s in suggestions)
                                 {
                                     <span class="badge text-bg-light border">
-                        <i class="bi bi-droplet-half me-1"></i>@s.bt
-                                        <span class="ms-1 text-secondary">(@s.count)</span>
-                    </span>
+                                        <i class="bi bi-droplet-half me-1"></i>@s.Bt
+                                        <span class="ms-1 text-secondary">(@s.Count)</span>
+                                    </span>
                                 }
                             </div>
                         </div>

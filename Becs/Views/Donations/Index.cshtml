@@ -1,10 +1,10 @@
 @model Becs.Models.DonationInput
 @{
     ViewData["Title"] = "קליטת תרומות";
-    var units = (IEnumerable<Becs.Models.BloodUnit>)ViewBag.Units;
+    var units = (IEnumerable<Becs.Models.BloodUnitVm>)ViewBag.Units;
 }
-<div class="row g-4" dir="rtl">
 
+<div class="row g-4" dir="rtl">
     <div class="col-12">
         <div class="section-card p-4">
             <h3 class="mb-3"><i class="bi bi-box-arrow-in-down text-primary me-1"></i> קליטת תרומות</h3>
@@ -13,6 +13,10 @@
             {
                 <div class="alert alert-warning"><i class="bi bi-exclamation-circle me-1"></i> יש שגיאות בטופס. בדקו את הערכים.</div>
             }
+            @if (TempData["ok"] is string ok)
+            {
+                <div class="alert alert-success"><i class="bi bi-check2-circle me-1"></i> @ok</div>
+            }
 
             <form method="post" asp-action="Create" class="row g-3">
                 <div class="col-6 col-md-3">
@@ -20,28 +24,38 @@
                     <select asp-for="ABO" class="form-select">
                         <option>O</option><option>A</option><option>B</option><option>AB</option>
                     </select>
+                    <span asp-validation-for="ABO" class="text-danger"></span>
                 </div>
+
                 <div class="col-6 col-md-2">
                     <label class="form-label">Rh</label>
                     <select asp-for="RhSign" class="form-select">
                         <option>+</option><option>-</option>
                     </select>
+                    <span asp-validation-for="RhSign" class="text-danger"></span>
                 </div>
+
                 <div class="col-6 col-md-3">
                     <label class="form-label">תאריך תרומה</label>
                     <input asp-for="DonationDate" type="date" class="form-control" />
+                    <span asp-validation-for="DonationDate" class="text-danger"></span>
                 </div>
+
                 <div class="col-6 col-md-2">
                     <label class="form-label">ת״ז תורם</label>
                     <input asp-for="DonorId" class="form-control" placeholder="9 ספרות" />
+                    <span asp-validation-for="DonorId" class="text-danger"></span>
                 </div>
+
                 <div class="col-12 col-md-4">
                     <label class="form-label">שם מלא</label>
                     <input asp-for="DonorName" class="form-control" placeholder="שם פרטי ומשפחה" />
+                    <span asp-validation-for="DonorName" class="text-danger"></span>
                 </div>
+
                 <div class="col-12">
                     <button class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> קלוט למלאי</button>
-                    <span class="form-hint ms-2">המידע נשמר בזיכרון (Demo). אפשר לעבור ל-SQLite מאוחר יותר.</span>
+                    <span class="form-hint ms-2">הנתונים נשמרים בפוסטגרס (Docker).</span>
                 </div>
             </form>
         </div>
@@ -53,30 +67,29 @@
                 <h5 class="mb-0">מלאי קיים</h5>
                 <span class="text-secondary small">סה״כ: @units.Count()</span>
             </div>
+
             <div class="table-responsive">
                 <table class="table table-striped align-middle">
                     <thead>
-                    <tr><th>מזהה</th><th>סוג דם</th><th>תאריך</th><th>ת״ז</th><th>שם</th></tr>
+                    <tr><th>מזהה</th><th>סוג דם</th><th>תאריך</th><th>ת״ז</th><th>שם</th><th>סטטוס</th></tr>
                     </thead>
                     <tbody>
                     @foreach (var u in units)
                     {
-                        var rh = (u.Type.Rh==Becs.Models.Rh.Neg) ? "-" : "+";
-                        var key = $"{u.Type.ABO}{rh}";
-                        var cls = u.Type.ABO switch {
-                                "O" => "bt-o", "A" => "bt-a", "B" => "bt-b", "AB" => "bt-ab", _=>""
-                        };
+                        var key = $"{u.ABO}{u.Rh}";
+                        var cls = u.ABO switch { "O" => "bt-o", "A" => "bt-a", "B" => "bt-b", "AB" => "bt-ab", _ => "" };
                         <tr>
                             <td class="text-secondary">@u.Id</td>
                             <td>
                   <span class="bt-pill @cls">
                     <i class="bi bi-droplet-half"></i>
-                    <span class="fw-bold">@u.Type.ABO</span><span class="rh">@rh</span>
+                    <span class="fw-bold">@u.ABO</span><span class="rh">@u.Rh</span>
                   </span>
                             </td>
-                            <td>@u.DonationDate:yyyy-MM-dd</td>
+                            <td>@u.DonationDate.ToString("yyyy-MM-dd")</td>
                             <td class="text-monospace">@u.DonorId</td>
                             <td>@u.DonorName</td>
+                            <td>@u.Status</td>
                         </tr>
                     }
                     </tbody>
@@ -84,5 +97,8 @@
             </div>
         </div>
     </div>
-
 </div>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

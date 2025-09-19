@@ -1,44 +1,45 @@
+// Controllers/DonationsController.cs
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Becs.Models;
-using Becs.Services;
+using Becs.Data;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Becs.Controllers;
-
-public class DonationsController : Controller
+namespace Becs.Controllers
 {
-    private readonly InventoryService _svc;
-    public DonationsController(InventoryService svc) => _svc = svc;
-
-    public IActionResult Index()
+    public class DonationsController : Controller
     {
-        ViewBag.Units = _svc.AllUnits();
-        return View(new DonationInput());
-    }
+        private readonly IIntakeRepository _repo;
+        public DonationsController(IIntakeRepository repo) => _repo = repo;
 
-    [HttpPost]
-    public IActionResult Create(DonationInput input)
-    {
-        if (string.IsNullOrWhiteSpace(input.DonorId) || string.IsNullOrWhiteSpace(input.DonorName))
+        [HttpGet]
+        public async Task<IActionResult> Index(CancellationToken ct)
         {
-            ModelState.AddModelError("", "יש למלא ת״ז ושם מלא.");
-        }
-        if (!new[] { "O","A","B","AB" }.Contains(input.ABO?.ToUpperInvariant()))
-        {
-            ModelState.AddModelError("", "ABO לא תקין.");
-        }
-        if (input.RhSign != "+" && input.RhSign != "-")
-        {
-            ModelState.AddModelError("", "Rh לא תקין.");
+            ViewBag.Units = await _repo.GetUnitsAsync(ct);
+            return View(new DonationInput { DonationDate = DateTime.Today });
         }
 
-        if (!ModelState.IsValid)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(DonationInput input, CancellationToken ct)
         {
-            ViewBag.Units = _svc.AllUnits();
-            return View("Index", input);
-        }
+            if (string.IsNullOrWhiteSpace(input.DonorId) || string.IsNullOrWhiteSpace(input.DonorName))
+                ModelState.AddModelError("", "יש למלא ת״ז ושם מלא.");
+            if (!new[] { "O","A","B","AB" }.Contains(input.ABO?.ToUpperInvariant()))
+                ModelState.AddModelError("", "ABO לא תקין.");
+            if (input.RhSign != "+" && input.RhSign != "-")
+                ModelState.AddModelError("", "Rh לא תקין.");
 
-        _svc.AddDonation(input);
-        TempData["ok"] = "התרומה נקלטה בהצלחה";
-        return RedirectToAction(nameof(Index));
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Units = await _repo.GetUnitsAsync(ct);
+                return View("Index", input);
+            }
+
+            await _repo.InsertDonationAsync(input, ct);
+            TempData["ok"] = "התרומה נקלטה בהצלחה";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

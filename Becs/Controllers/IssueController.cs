@@ -1,62 +1,96 @@
-using Becs.Models;
-using Becs.Services;
-using Microsoft.AspNetCore.Mvc;
+// Controllers/IssueController.cs
+using System;
+using System.Collections.Generic;
 using System.Linq;
-namespace Becs.Controllers;
+using System.Threading;
+using System.Threading.Tasks;
+using Becs.Models;
+using Becs.Data;
+using Microsoft.AspNetCore.Mvc;
 
-public class IssueController : Controller
+namespace Becs.Controllers
 {
-    private readonly InventoryService _svc;
-    public IssueController(InventoryService svc) => _svc = svc;
-
-    public IActionResult Routine()
+    public class IssueController : Controller
     {
-        ViewBag.Result = null;
-        return View(new RoutineIssueInput());
-    }
-    [HttpPost]
-    public IActionResult Routine(RoutineIssueInput input)
-    {
-        if (input.Quantity <= 0) ModelState.AddModelError("", "כמות חייבת להיות חיובית.");
-        if (!new[] { "O","A","B","AB" }.Contains(input.ABO?.ToUpperInvariant()))
-            ModelState.AddModelError("", "ABO לא תקין.");
-        if (input.RhSign != "+" && input.RhSign != "-")
-            ModelState.AddModelError("", "Rh לא תקין.");
+        private readonly IIssueRepository _repo;
+        public IssueController(IIssueRepository repo) => _repo = repo;
 
-        if (!ModelState.IsValid) return View(input);
+        [HttpGet]
+        public IActionResult Routine()
+        {
+            ViewBag.Result = null;    // legacy
+            return View(new RoutineIssueInput { Quantity = 1, RhSign = "+" });
+        }
 
-        var req = new BloodType(input.ABO.ToUpperInvariant(), input.RhSign == "-" ? Rh.Neg : Rh.Pos);
-        var (chosen, suggestions) = _svc.SelectForRoutine(req, input.Quantity);
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Routine(RoutineIssueInput input, CancellationToken ct)
+        {
+            // Validate
+            var abo = input.ABO?.ToUpperInvariant();
+            if (input.Quantity <= 0) ModelState.AddModelError("", "כמות חייבת להיות חיובית.");
+            if (abo is null || !(new[] { "O","A","B","AB" }.Contains(abo)))
+                ModelState.AddModelError("", "ABO לא תקין.");
+            if (input.RhSign != "+" && input.RhSign != "-")
+                ModelState.AddModelError("", "Rh לא תקין.");
 
-        ViewBag.Suggestions = suggestions;
-        ViewBag.Chosen = chosen;
+            if (!ModelState.IsValid) return View(input);
 
-        return View(input);
-    }
+            var (chosen, suggestions) = await _repo.SelectForRoutineAsync(abo!, input.RhSign, input.Quantity, ct);
+            ViewBag.Suggestions = suggestions;   // List<AltSuggestion>
+            ViewBag.Chosen = chosen;             // List<BloodUnitVm>
 
-    [HttpPost]
-    public IActionResult ConfirmIssue([FromForm] string[] ids)
-    {
-        var issued = _svc.IssueByIds(ids, "routine");
-        TempData["ok"] = $"הונפקו {issued.Count} מנות: {string.Join(", ", issued.Select(u => u.Id))}";
-        return RedirectToAction(nameof(Routine));
-    }
+            return View(input);
+        }
 
-    public IActionResult Emergency()
-    {
-        var svc = _svc; // already injected
-        // Count O- in stock for UX
-        var oNeg = svc.AllUnits().Count(u => u.Type.ABO == "O" && u.Type.Rh == Becs.Models.Rh.Neg);
-        ViewBag.ONegCount = oNeg;
-        return View();
-    }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmIssue([FromForm] string[] ids, CancellationToken ct)
+        {
+            if (ids is null || ids.Length == 0)
+            {
+                TempData["err"] = "לא נבחרו מנות להנפקה.";
+                return RedirectToAction(nameof(Routine));
+            }
 
-    [HttpPost]
-    public IActionResult EmergencyIssue()
-    {
-        var issued = _svc.IssueEmergencyONeg();
-        if (issued.Count == 0) TempData["err"] = "אין מלאי O-! דרוש טיפול מיידי.";
-        else TempData["ok"]  = $"נופקו {issued.Count} מנות O-: {string.Join(", ", issued.Select(u => u.Id))}";
-        return RedirectToAction(nameof(Emergency));
+            // Convert checkbox values to Guid
+            var guids = new List<Guid>();
+            foreach (var s in ids)
+            {
+                if (Guid.TryParse(s, out var g)) guids.Add(g);
+            }
+            if (guids.Count == 0)
+            {
+                TempData["err"] = "מזהים לא תקפים.";
+                return RedirectToAction(nameof(Routine));
+            }
+
+            var issued = await _repo.IssueByIdsAsync(guids, "Routine", ct);
+            if (issued.Count == 0)
+                TempData["err"] = "לא הונפקו מנות (יתכן שכבר הונפקו/לא זמינות).";
+            else
+                TempData["ok"] = $"הונפקו {issued.Count} מנות: {string.Join(", ", issued.Select(u => u.Id))}";
+
+            return RedirectToAction(nameof(Routine));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Emergency(CancellationToken ct)
+        {
+            ViewBag.ONegCount = await _repo.CountONegAsync(ct);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmergencyIssue(CancellationToken ct)
+        {
+            var issued = await _repo.IssueEmergencyONegAsync(ct);
+            if (issued.Count == 0)
+                TempData["err"] = "אין מלאי O-! דרוש טיפול מיידי.";
+            else
+                TempData["ok"]  = $"נופקו {issued.Count} מנות O-: {string.Join(", ", issued.Select(u => u.Id))}";
+            return RedirectToAction(nameof(Emergency));
+        }
     }
 }
