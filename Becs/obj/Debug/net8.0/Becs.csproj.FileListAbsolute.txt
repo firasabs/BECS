@@ -58,3 +58,8 @@
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/runtimes/win-arm64/native/e_sqlite3.dll
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/runtimes/win-x64/native/e_sqlite3.dll
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/runtimes/win-x86/native/e_sqlite3.dll
+/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/FluentAssertions.dll
+/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/xunit.abstractions.dll
+/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/xunit.assert.dll
+/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/xunit.core.dll
+/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/xunit.execution.dotnet.dll
