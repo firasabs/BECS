@@ -1,9 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# 
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Becs", "Becs\Becs.csproj", "{D750BE26-AC4C-4FE2-9E08-78704E63B39D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Becs.Tests", "Becs.Tests\Becs.Tests.csproj", "{DCC367DF-3EE9-4B00-A651-DAFA90B5ED33}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +13,5 @@ Global
 		{D750BE26-AC4C-4FE2-9E08-78704E63B39D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D750BE26-AC4C-4FE2-9E08-78704E63B39D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D750BE26-AC4C-4FE2-9E08-78704E63B39D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DCC367DF-3EE9-4B00-A651-DAFA90B5ED33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DCC367DF-3EE9-4B00-A651-DAFA90B5ED33}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DCC367DF-3EE9-4B00-A651-DAFA90B5ED33}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DCC367DF-3EE9-4B00-A651-DAFA90B5ED33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

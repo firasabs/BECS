@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Becs.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7fc34d6582ba5b0017daaf03ec3a40de6f0b1730")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b12452503868fa86aa726e8fa0f6233d95f1b56e")]
 [assembly: System.Reflection.AssemblyProductAttribute("Becs.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Becs.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
