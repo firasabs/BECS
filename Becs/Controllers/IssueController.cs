@@ -45,27 +45,16 @@ namespace Becs.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmIssue([FromForm] string[] ids, CancellationToken ct)
+        public async Task<IActionResult> ConfirmIssue(List<string> ids, CancellationToken ct)
         {
-            if (ids is null || ids.Length == 0)
+            if (ids == null || ids.Count == 0)
             {
                 TempData["err"] = "לא נבחרו מנות להנפקה.";
                 return RedirectToAction(nameof(Routine));
             }
 
-            // Convert checkbox values to Guid
-            var guids = new List<Guid>();
-            foreach (var s in ids)
-            {
-                if (Guid.TryParse(s, out var g)) guids.Add(g);
-            }
-            if (guids.Count == 0)
-            {
-                TempData["err"] = "מזהים לא תקפים.";
-                return RedirectToAction(nameof(Routine));
-            }
+            var issued = await _repo.IssueByIdsAsync(ids, "Routine", ct);
 
-            var issued = await _repo.IssueByIdsAsync(guids, "Routine", ct);
             if (issued.Count == 0)
                 TempData["err"] = "לא הונפקו מנות (יתכן שכבר הונפקו/לא זמינות).";
             else

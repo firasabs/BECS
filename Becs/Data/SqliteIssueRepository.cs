@@ -9,7 +9,7 @@ namespace Becs.Data
         Task<(List<BloodUnitVm> chosen, List<AltSuggestion> suggestions)>
             SelectForRoutineAsync(string abo, string rh, int qty, CancellationToken ct = default);
 
-        Task<List<BloodUnitVm>> IssueByIdsAsync(IEnumerable<Guid> ids, string issueType, CancellationToken ct = default);
+        Task<List<BloodUnitVm>> IssueByIdsAsync(List<string> ids, string issueType, CancellationToken ct = default);
 
         Task<int> CountONegAsync(CancellationToken ct = default);
         Task<List<BloodUnitVm>> IssueEmergencyONegAsync(CancellationToken ct = default);
@@ -129,7 +129,8 @@ LIMIT 6;";
             return list;
         }
 
-        public async Task<List<BloodUnitVm>> IssueByIdsAsync(IEnumerable<Guid> ids, string issueType, CancellationToken ct = default)
+        public async Task<List<BloodUnitVm>> IssueByIdsAsync(List<string> ids, string issueType,
+            CancellationToken ct = default)
         {
             var idList = ids.Select(g => g.ToString()).ToList();
             if (idList.Count == 0) return new();
@@ -220,14 +221,14 @@ WHERE bu.Status='Available' AND bu.Id IN ({placeholders});";
         public async Task<List<BloodUnitVm>> IssueEmergencyONegAsync(CancellationToken ct = default)
         {
             const string sqlIds = @"SELECT Id FROM BloodUnits WHERE Status='Available' AND ABO='O' AND Rh='-';";
-            var ids = new List<Guid>();
+            List<string> ids = new List<string>();
             await using var conn = Conn();
             await conn.OpenAsync(ct);
             await using (var cmd = new SqliteCommand(sqlIds, conn))
             await using (var r = await cmd.ExecuteReaderAsync(ct))
             {
                 while (await r.ReadAsync(ct))
-                    ids.Add(Guid.Parse(r.GetString(0)));
+                    ids.Add(r.GetString(0));
             }
             return await IssueByIdsAsync(ids, "Emergency", ct);
         }

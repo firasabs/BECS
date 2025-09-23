@@ -67,7 +67,7 @@ ON CONFLICT(DonorId) DO UPDATE SET DonorName = excluded.DonorName;";
 
             const string insertUnit = @"
 INSERT INTO BloodUnits (Id, ABO, Rh, DonationDate, DonorId, Status, DonationSource)
-VALUES (@id, @abo, @rh, @date, @donorId, 'Available', 'Intake');";
+VALUES (@id, @abo, @rh, @date, @donorId, 'Available', 'Soroka');";
 
             await using var conn = Conn();
             await conn.OpenAsync(ct);
