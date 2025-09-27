@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# IDE/user-specific
+.idea/
+*.user
+*.DotSettings.user
+
+# Build outputs
+bin/
+obj/
+TestResults/
+
