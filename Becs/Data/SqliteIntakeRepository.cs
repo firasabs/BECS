@@ -13,18 +13,7 @@ namespace Becs.Data
     public class SqliteIntakeRepository : IIntakeRepository
     {
         private readonly string _cs;
-        public SqliteIntakeRepository(IConfiguration cfg)
-        {
-            _cs = Environment.GetEnvironmentVariable("APP_DB_CS")
-               ?? cfg.GetConnectionString("Sqlite")
-               ?? "Data Source=becs.db";
-        }
-
-        private SqliteConnection Conn()
-        {
-            var c = new SqliteConnection(_cs);
-            return c;
-        }
+        public SqliteIntakeRepository(string connectionString) => _cs = connectionString;
 
         public async Task<IEnumerable<BloodUnitVm>> GetUnitsAsync(CancellationToken ct = default)
         {
@@ -36,7 +25,7 @@ ORDER BY datetime(bu.DonationDate) DESC, bu.Id DESC
 LIMIT 500;";
 
             var list = new List<BloodUnitVm>();
-            await using var conn = Conn();
+            await using var conn = new SqliteConnection(_cs);
             await conn.OpenAsync(ct);
             await using var cmd = new SqliteCommand(sql, conn);
             await using var r = await cmd.ExecuteReaderAsync(ct);
@@ -68,8 +57,7 @@ ON CONFLICT(DonorId) DO UPDATE SET DonorName = excluded.DonorName;";
             const string insertUnit = @"
 INSERT INTO BloodUnits (Id, ABO, Rh, DonationDate, DonorId, Status, DonationSource)
 VALUES (@id, @abo, @rh, @date, @donorId, 'Available', 'Soroka');";
-
-            await using var conn = Conn();
+            await using var conn = new SqliteConnection(_cs);
             await conn.OpenAsync(ct);
 
             // Enforce FKs in this connection

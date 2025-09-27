@@ -18,14 +18,7 @@ namespace Becs.Data
     public class SqliteIssueRepository : IIssueRepository
     {
         private readonly string _cs;
-        public SqliteIssueRepository(IConfiguration cfg)
-        {
-            _cs = Environment.GetEnvironmentVariable("APP_DB_CS")
-               ?? cfg.GetConnectionString("Sqlite")
-               ?? "Data Source=becs.db";
-        }
-        private SqliteConnection Conn() => new SqliteConnection(_cs);
-
+        public SqliteIssueRepository(string connectionString) => _cs = connectionString;
         private static string AboCompatSql => @"
 (
  (@rec_abo='O'  AND bu.ABO='O') OR
@@ -66,7 +59,7 @@ WHERE bu.Status='Available' AND {AboCompatSql} AND {RhCompatSql}
 ORDER BY exact_match DESC, freq DESC, datetime(bu.DonationDate) ASC
 LIMIT 500;";
 
-            await using var conn = Conn();
+            await using var conn = new SqliteConnection(_cs);
             await conn.OpenAsync(ct);
 
             var compatibles = new List<BloodUnitVm>();
@@ -135,7 +128,7 @@ LIMIT 6;";
             var idList = ids.Select(g => g.ToString()).ToList();
             if (idList.Count == 0) return new();
 
-            await using var conn = Conn();
+            await using var conn = new SqliteConnection(_cs);
             await conn.OpenAsync(ct);
             await using (var pragma = new SqliteCommand("PRAGMA foreign_keys=ON;", conn))
                 await pragma.ExecuteNonQueryAsync(ct);
@@ -211,7 +204,7 @@ WHERE bu.Status='Available' AND bu.Id IN ({placeholders});";
         public async Task<int> CountONegAsync(CancellationToken ct = default)
         {
             const string sql = @"SELECT COUNT(*) FROM BloodUnits WHERE Status='Available' AND ABO='O' AND Rh='-';";
-            await using var conn = Conn();
+            await using var conn = new SqliteConnection(_cs);
             await conn.OpenAsync(ct);
             await using var cmd = new SqliteCommand(sql, conn);
             var n = (long)(await cmd.ExecuteScalarAsync(ct))!;
@@ -222,7 +215,7 @@ WHERE bu.Status='Available' AND bu.Id IN ({placeholders});";
         {
             const string sqlIds = @"SELECT Id FROM BloodUnits WHERE Status='Available' AND ABO='O' AND Rh='-';";
             List<string> ids = new List<string>();
-            await using var conn = Conn();
+            await using var conn = new SqliteConnection(_cs);
             await conn.OpenAsync(ct);
             await using (var cmd = new SqliteCommand(sqlIds, conn))
             await using (var r = await cmd.ExecuteReaderAsync(ct))
