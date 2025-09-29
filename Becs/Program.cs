@@ -28,8 +28,11 @@ cs = sb.ToString();
 
 builder.Services.AddSingleton<IIntakeRepository>(_ => new SqliteIntakeRepository(cs));
 builder.Services.AddSingleton<IIssueRepository>(_ => new SqliteIssueRepository(cs));
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IAuditLogger, AuditLogger>();
 var app = builder.Build();
+
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {

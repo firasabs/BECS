@@ -1,0 +1,26 @@
+@* Simple top navigation; include in _Layout *@
+<nav class="navbar">
+    <div class="nav-left">
+        <div class="dropdown">
+            <button class="btn">Records ▾</button>
+            <div class="dropdown-menu">
+                <a href="/admin/export?format=csv">Download ZIP (CSV)</a>
+                <a href="/admin/export?format=json">Download ZIP (JSON)</a>
+                <div class="divider"></div>
+                <a asp-controller="Audit" asp-action="Index">View Audit Logs</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<style>
+    .navbar { display:flex; justify-content:space-between; align-items:center; padding:.75rem 1rem; border-bottom:1px solid #eee; }
+    .brand { font-weight:700; text-decoration:none; }
+    .btn { padding:.5rem .75rem; border:1px solid #ddd; background:#fff; cursor:pointer; }
+    .dropdown { position:relative; display:inline-block; }
+    .dropdown-menu { display:none; position:absolute; right:0; min-width:220px; background:#fff; border:1px solid #ddd; box-shadow:0 6px 16px rgba(0,0,0,.08); z-index:1000; }
+    .dropdown:hover .dropdown-menu { display:block; }
+    .dropdown-menu a { display:block; padding:.6rem .8rem; text-decoration:none; color:#111; }
+    .dropdown-menu a:hover { background:#f6f6f6; }
+    .divider { height:1px; background:#eee; margin:.35rem 0; }
+</style>

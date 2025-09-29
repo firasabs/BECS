@@ -29,6 +29,10 @@
             </ul>
         </div>
     </nav>
+    @await Html.PartialAsync("_TopNav")
+    <div class="container">
+        @RenderBody()
+    </div>
 </header>
 
 <main class="container py-4">
