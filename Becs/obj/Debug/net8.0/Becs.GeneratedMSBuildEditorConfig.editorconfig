@@ -18,6 +18,10 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs
 build_property._RazorSourceGeneratorDebug = 
 
+[/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Audit/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXVkaXQvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Donations/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvRG9uYXRpb25zL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

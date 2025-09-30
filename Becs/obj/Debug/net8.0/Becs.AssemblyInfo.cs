@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Becs")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ec965f318d297baedbd58e32fda99d44409ee7fa")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+09d29c29fdc093120aec5a2083de990b767b572b")]
 [assembly: System.Reflection.AssemblyProductAttribute("Becs")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Becs")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

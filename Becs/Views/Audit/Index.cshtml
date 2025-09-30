@@ -1,0 +1,107 @@
+@model List<AuditRow>
+@{
+    ViewData["Title"] = "Audit Logs";
+    var total = (long)(ViewBag.Total ?? 0L);
+    var page = (int)(ViewBag.Page ?? 1);
+    var pageSize = (int)(ViewBag.PageSize ?? 50);
+    var lastPage = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize));
+    string q(string k,string? v) {
+        var qs = new Dictionary<string,string?> {
+            ["search"] = (string?)ViewBag.Search,
+            ["action"] = (string?)ViewBag.ActionFilter,
+            ["entity"] = (string?)ViewBag.Entity,
+            ["corr"]   = (string?)ViewBag.Corr,
+            ["pageSize"] = pageSize.ToString()
+        };
+        qs[k] = v;
+        return "?" + string.Join("&", qs.Where(p=>!string.IsNullOrWhiteSpace(p.Value)).Select(p=>$"{p.Key}={Uri.EscapeDataString(p.Value!)}"));
+    }
+}
+<h2 class="mb">Audit Logs</h2>
+
+<form method="get" class="filters">
+    <input type="text" name="search" placeholder="Text search…" value="@ViewBag.Search" />
+    <input type="text" name="action" placeholder="Action… " value="@ViewBag.ActionFilter" />
+    <input type="text" name="entity" placeholder="Entity…" value="@ViewBag.Entity" />
+    <input type="text" name="corr" placeholder="Correlation Id…" value="@ViewBag.Corr" />
+    <select name="pageSize">
+        @foreach (var ps in new []{25,50,100,200}) {
+            <option value="@ps" selected="@(ps==pageSize)">@ps</option>
+        }
+    </select>
+    <button class="btn" type="submit">Filter</button>
+    <a class="btn ghost" href="/Audit">Clear</a>
+</form>
+
+<div class="pager">
+    <a class="btn" href="@q("page", lastPage.ToString())" aria-disabled="@(page==lastPage)">Last ⏭</a>
+    <a class="btn" href="@q("page", Math.Min(lastPage, page + 1).ToString())" aria-disabled="@(page == lastPage)">Next ▶</a>
+    <span>Page @(page) / @(lastPage) &mdash; @(total) rows</span>
+    <a class="btn" href="@q("page", Math.Max(1, page - 1).ToString())" aria-disabled="@(page == 1)">◀ Prev</a>
+    <a class="btn" href="@q("page", "1")" aria-disabled="@(page == 1)">⏮ First</a>
+
+</div>
+
+<div class="table-wrap">
+    <table class="audit">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Timestamp (UTC)</th>
+            <th>Action</th>
+            <th>Entity</th>
+            <th>Success</th>
+            <th>Correlation</th>
+            <th>User</th>
+            <th>IP</th>
+            <th>HTTP</th>
+            <th>Path</th>
+            <th>Details (JSON)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.Id</td>
+                <td>@r.TimestampUtc</td>
+                <td>@r.Action</td>
+                <td>@(string.IsNullOrEmpty(r.EntityName) ? "-" : $"{r.EntityName}#{r.EntityId}")</td>
+                <td>@(r.Success ? "✓" : "✗")</td>
+                <td style="=font-family:monospace;">@r.CorrelationId</td>
+                <td>@(r.UserName ?? r.UserId ?? "-")</td>
+                <td>@r.IpAddress</td>
+                <td>@($"{r.HttpMethod}")</td>
+                <td>@r.Path</td>
+                <td><details><summary>view</summary><pre>@(r.DetailsJson ?? "-")</pre></details></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+@if (ViewBag.Error != null) {
+    <div style="padding:.6rem; background:#ffe6e6; border:1px solid #ffb3b3; margin:.5rem 0;">@ViewBag.Error</div>
+}
+@if (ViewBag.Info != null) {
+    <div style="padding:.6rem; background:#eef8ff; border:1px solid #bfe0ff; margin:.5rem 0;">@ViewBag.Info</div>
+}
+<div style="padding:.4rem; background:#f8f8f8; border:1px solid #e5e5e5; margin:.5rem 0; font-size:.9rem;">
+    <div><b>Connection:</b> @ViewBag.ConnStr</div>
+    <div><b>audit_logs exists:</b> @((ViewBag.TableExists ?? false) ? "yes" : "no")</div>
+    <div><b>Total rows (no filters):</b> @(ViewBag.TotalAll ?? 0)</div>
+</div>
+
+
+<style>
+    .mb { margin: .5rem 0 1rem 0; }
+    .filters { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; flex-wrap:wrap; }
+    .filters input, .filters select { padding:.4rem .5rem; border:1px solid #ddd; }
+    .btn { padding:.4rem .7rem; border:1px solid #ddd; background:#fff; text-decoration:none; cursor:pointer; }
+    .btn.ghost { background:transparent; }
+    .pager { display:flex; gap:.5rem; align-items:center; margin:.5rem 0 1rem 0; flex-wrap:wrap; }
+    .table-wrap { overflow:auto; }
+    table.audit { border-collapse:collapse; width:100%; }
+    table.audit th, table.audit td { border:1px solid #eee; padding:.5rem; font-size:.92rem; vertical-align:top; }
+    details summary { cursor:pointer; color:#333; }
+    pre { white-space:pre-wrap; word-break:break-word; }
+</style>
