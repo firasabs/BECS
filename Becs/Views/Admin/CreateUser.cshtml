@@ -1,0 +1,28 @@
+@model AdminController.CreateUserVm
+@{
+    ViewData["Title"] = "Create User";
+}
+<h2>Create User</h2>
+<form asp-action="CreateUser" method="post">
+    @Html.AntiForgeryToken()
+    <div>
+        <label>Username</label>
+        <input asp-for="Username" />
+    </div>
+    <div>
+        <label>Password</label>
+        <input asp-for="Password" type="password" />
+    </div>
+    <div>
+        <label>Role</label>
+        <select asp-for="Role">
+            <option value="user">user</option>
+            <option value="researcher">researcher</option>
+            <option value="admin">admin</option>
+        </select>
+    </div>
+    <button type="submit">Create</button>
+</form>
+<div style="color:red">
+    @foreach (var e in ViewData.ModelState.Values.SelectMany(v=>v.Errors)) { <div>@e.ErrorMessage</div> }
+</div>

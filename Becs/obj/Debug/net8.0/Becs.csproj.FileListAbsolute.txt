@@ -63,3 +63,4 @@
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/xunit.assert.dll
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/xunit.core.dll
 /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/xunit.execution.dotnet.dll
+/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/bin/Debug/net8.0/BCrypt.Net-Next.dll

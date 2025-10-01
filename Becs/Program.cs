@@ -1,5 +1,6 @@
 using Becs.Data;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
@@ -30,6 +31,24 @@ builder.Services.AddSingleton<IIntakeRepository>(_ => new SqliteIntakeRepository
 builder.Services.AddSingleton<IIssueRepository>(_ => new SqliteIssueRepository(cs));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuditLogger, AuditLogger>();
+builder.Services.AddScoped<IUserRepository>(_ => new UserRepository(cs));
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IResearcherData>(_ => new ResearcherData(cs));
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Auth/Denied";
+        options.Cookie.Name = "BECS.Auth";
+        options.SlidingExpiration = true;
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", p => p.RequireRole("admin"));
+    options.AddPolicy("Staff", p => p.RequireRole("admin","user"));
+    options.AddPolicy("Researcher", p => p.RequireRole("admin","researcher"));
+});
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
@@ -43,6 +62,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapGet("/healthz", () => Results.Ok("OK"));

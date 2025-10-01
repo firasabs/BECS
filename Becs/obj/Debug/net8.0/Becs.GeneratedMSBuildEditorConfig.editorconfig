@@ -18,8 +18,24 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = /Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs
 build_property._RazorSourceGeneratorDebug = 
 
+[/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Admin/CreateUser.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWRtaW4vQ3JlYXRlVXNlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Admin/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWRtaW4vSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Audit/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXVkaXQvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Auth/Denied.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXV0aC9EZW5pZWQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Auth/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXV0aC9Mb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Donations/Index.cshtml]
@@ -36,6 +52,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Issue/Routine.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSXNzdWUvUm91dGluZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Researcher/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUmVzZWFyY2hlci9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Views/Shared/Error.cshtml]

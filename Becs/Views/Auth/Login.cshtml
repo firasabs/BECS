@@ -1,0 +1,21 @@
+@model AuthController.LoginVm
+@{
+    ViewData["Title"] = "Login";
+}
+<h2>Login</h2>
+<form asp-action="Login" method="post">
+    @Html.AntiForgeryToken()
+    <div>
+        <label>Username</label>
+        <input asp-for="Username" autocomplete="username" />
+    </div>
+    <div>
+        <label>Password</label>
+        <input asp-for="Password" type="password" autocomplete="current-password" />
+    </div>
+    <input type="hidden" asp-for="ReturnUrl" value="@ViewBag.ReturnUrl" />
+    <button type="submit">Sign in</button>
+</form>
+<div style="color:red">
+    @foreach (var e in ViewData.ModelState.Values.SelectMany(v=>v.Errors)) { <div>@e.ErrorMessage</div> }
+</div>

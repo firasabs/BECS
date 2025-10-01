@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Admin";
+}
+<h2>Admin</h2>
+@if (TempData["ok"] != null) { <div style="color:green">@TempData["ok"]</div> }
+<ul>
+    <li><a asp-controller="Admin" asp-action="CreateUser">Create User</a></li>
+</ul>
+<form asp-controller="Auth" asp-action="Logout" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit">Logout</button>
+</form>

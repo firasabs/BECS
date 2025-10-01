@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "zJD4OPOqqpg=",
+  "dgSpecHash": "g4xvSV2Gw7E=",
   "success": true,
   "projectFilePath": "/Users/firasabusada/Desktop/SW/שנה ג /מבוא לתוכנה ביו רפואית/WebApplication1/Becs/Becs.csproj",
   "expectedPackageFiles": [
+    "/Users/firasabusada/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/Users/firasabusada/.nuget/packages/fluentassertions/8.6.0/fluentassertions.8.6.0.nupkg.sha512",
     "/Users/firasabusada/.nuget/packages/microsoft.data.sqlite/10.0.0-rc.1.25451.107/microsoft.data.sqlite.10.0.0-rc.1.25451.107.nupkg.sha512",
     "/Users/firasabusada/.nuget/packages/microsoft.data.sqlite.core/10.0.0-rc.1.25451.107/microsoft.data.sqlite.core.10.0.0-rc.1.25451.107.nupkg.sha512",
