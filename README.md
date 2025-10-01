@@ -1,15 +1,40 @@
-# BECS – Part 1
+# 🩸 BECS – Part 3  
+**Blood Establishment Computer Software (BECS) with HIPAA & Part 11 Compliance**  
 
-This project is Part 1 of the BECS assignment. It implements the initial functionality of a blood establishment computer system using ASP.NET Core MVC with SQLite as the database.
+This is **Part 3** of the BECS project. In this phase, the system is extended to include:  
 
-## Features Implemented in Part 1
+- **User authentication & roles** (Admin, User, Researcher).  
+- **HIPAA compliance** for Protected Health Information (PHI).  
+- **De-identified data views** for researchers.  
+- **Full support for FDA Part 11 audit trail** (tamper-evident logs with chained hashes).  
+- **Dockerized deployment** for portability.  
 
-* Intake of donated blood units.
-* Issuing of blood units for routine and emergency use.
-* Validation of input fields.
-* Blood compatibility rules service.
-* Unit tests to verify core functionality.
+---
 
+## 🚀 Features
+
+### ✅ Authentication & Roles
+- **Login/Logout** with secure password storage (SHA-256 + unique salt).  
+- **Admin**:  
+  - Manage all users (create new accounts).  
+  - Full access to donations, issues, audit metadata.  
+- **User (Blood Bank Staff)**:  
+  - Record blood donations.  
+  - Issue blood units (routine/emergency).  
+- **Researcher (Student)**:  
+  - Read-only access to de-identified inventory via `ResearcherView`.  
+  - Cannot view personal donor info (name, ID, address).
+
+### ✅ HIPAA Compliance
+- All PHI fields (name, ID, etc.) restricted to **admin/staff only**.  
+- Researchers only see anonymized data (`ABO`, `Rh`, `DonationDate`, `Status`, `Source`).  
+
+### ✅ Part 11 Audit Trail
+- Every action (login, logout, donation, issue, query) logged in `audit_logs`.  
+- Logs include timestamp, user, action, request metadata, and cryptographic chain hash.  
+- Tamper-evident: each log stores `prev_hash + pepper` to form a verifiable chain.  
+
+---
 ## Prerequisites
 
 * [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
@@ -29,7 +54,7 @@ cd Becs
 ### 2. Build the Docker image
 
 ```bash
-docker build -t becs-pt1 .
+docker build -t becs .
 ```
 
 ### 3. Prepare the database file (host-persisted)
@@ -48,7 +73,7 @@ Run the container while mapping the host database file into the container’s wr
 docker run -e ASPNETCORE_ENVIRONMENT=Development \
   -p 5080:8080 \
   -v "$(pwd)/becs.db:/data/becs.db" \
-  becs-pt1
+  becs
 ```
 
 * The application will now be available at: **[http://127.0.0.1:5080](http://127.0.0.1:5080)**
