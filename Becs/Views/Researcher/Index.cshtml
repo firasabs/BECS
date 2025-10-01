@@ -1,31 +1,198 @@
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 @model IEnumerable<ResearchRow>
-
 @{
     ViewData["Title"] = "Researcher Data (De-Identified)";
 }
 
-<h2>De-identified Inventory</h2>
+<div class="container py-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1 fw-bold">De-identified Inventory</h1>
+            <div class="text-muted small">
+                <span id="invCount">@Model.Count()</span> records
+            </div>
+        </div>
 
-<table>
-    <thead>
-    <tr>
-        <th>Blood Type</th>
-        <th>Rh</th>
-        <th>Donation Date</th>
-        <th>Status</th>
-        <th>Source</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var row in Model)
-    {
-        <tr>
-            <td>@row.BloodType</td>
-            <td>@row.Rh</td>
-            <td>@row.DonationDate</td>
-            <td>@row.Status</td>
-            <td>@row.DonationSource</td>
-        </tr>
-    }
-    </tbody>
-</table>
+        <!-- Controls -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="input-group" style="min-width: 260px;">
+                <span class="input-group-text bg-body-tertiary border-0"><i class="bi bi-search"></i></span>
+                <input id="searchBox" type="search" class="form-control border-0"
+                       placeholder="Search source / blood type / status…" />
+            </div>
+
+            <select id="statusFilter" class="form-select" style="width: 160px ;">
+                <option value="">Status: All</option>
+                <option value="Available">Available</option>
+                <option value="Issued">Issued</option>
+            </select>
+
+            <select id="typeFilter" class="form-select" style="width: 140px;">
+                <option value="">Blood: All</option>
+                <option value="O">O</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="AB">AB</option>
+            </select>
+
+            <input id="fromDate" type="date" class="form-control" title="From date" />
+            <input id="toDate" type="date" class="form-control" title="To date" />
+
+            <button id="clearBtn" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Clear
+            </button>
+        </div>
+    </div>
+
+    <!-- Responsive table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="invTable" class="table align-middle table-hover table-striped mb-0">
+                    <thead class="table-light position-sticky top-0">
+                    <tr>
+                        <th class="text-nowrap" data-sort="blood">Blood Type</th>
+                        <th class="text-nowrap" data-sort="rh">Rh</th>
+                        <th class="text-nowrap" data-sort="date">Donation Date <i class="bi bi-arrow-down-up small opacity-50"></i></th>
+                        <th class="text-nowrap" data-sort="status">Status</th>
+                        <th class="text-nowrap" data-sort="source">Source</th>
+                    </tr>
+                    </thead>
+                    <tbody class="fs-6">
+                    @foreach (var row in Model)
+                    {
+                        var dateStr = row.DonationDate;
+                        var rhText = string.IsNullOrWhiteSpace(row.Rh) ? "-" : row.Rh.Trim();
+                        string statusBadge = row.Status?.Equals("Available", StringComparison.OrdinalIgnoreCase) == true
+                            ? "bg-success-subtle text-success-emphasis border-success-subtle"
+                            : "bg-secondary-subtle text-secondary-emphasis border-secondary-subtle";
+
+                        <tr data-source="@row.DonationSource"
+                            data-status="@row.Status"
+                            data-blood="@row.BloodType"
+                            data-date="@dateStr">
+                            <td>
+                            <span class="badge rounded-pill blood-badge @($"blood-{row.BloodType.ToLower()}")">
+                                @row.BloodType
+                            </span>
+                            </td>
+
+                            <td class="fw-semibold">@rhText</td>
+                            <td class="text-nowrap">
+                                <i class="bi bi-calendar-week me-1"></i>@dateStr
+                            </td>
+                            <td>
+                                <span class="badge border @statusBadge">@row.Status</span>
+                            </td>
+                            <td class="text-truncate" style="max-width: 260px;">
+                                <i class="bi bi-geo-alt me-1"></i>@row.DonationSource
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptyState" class="text-center py-5 d-none">
+                <i class="bi bi-inboxes fs-1 d-block mb-2 opacity-50"></i>
+                <p class="mb-1 fw-semibold">No results</p>
+                <p class="text-muted small">Try changing filters or clearing them.</p>
+                <button id="emptyClear" class="btn btn-primary"><i class="bi bi-eraser"></i> Clear filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const q = (s, el=document) => el.querySelector(s);
+            const qa = (s, el=document) => Array.from(el.querySelectorAll(s));
+
+            const table = q('#invTable tbody');
+            const searchBox = q('#searchBox');
+            const statusFilter = q('#statusFilter');
+            const typeFilter = q('#typeFilter');
+            const fromDate = q('#fromDate');
+            const toDate = q('#toDate');
+            const clearBtn = q('#clearBtn');
+            const emptyClear = q('#emptyClear');
+            const emptyState = q('#emptyState');
+            const invCount = q('#invCount');
+
+            function normalize(s){ return (s||'').toString().toLowerCase().trim(); }
+
+            function inDateRange(iso) {
+                if (!iso) return true;
+                const d = iso;
+                const fromOk = !fromDate.value || d >= fromDate.value;
+                const toOk = !toDate.value || d <= toDate.value;
+                return fromOk && toOk;
+            }
+
+            function applyFilters(){
+                const term = normalize(searchBox.value);
+                const status = normalize(statusFilter.value);
+                const blood = normalize(typeFilter.value);
+
+                let visible = 0;
+                qa('tr', table).forEach(tr => {
+                    const src = normalize(tr.dataset.source);
+                    const st = normalize(tr.dataset.status);
+                    const bt = normalize(tr.dataset.blood);
+                    const dd = tr.dataset.date;
+
+                    const textMatch = !term || src.includes(term) || bt.includes(term) || st.includes(term);
+                    const statusMatch = !status || st === status;
+                    const bloodMatch = !blood || bt === blood;
+                    const dateMatch = inDateRange(dd);
+
+                    const show = textMatch && statusMatch && bloodMatch && dateMatch;
+                    tr.classList.toggle('d-none', !show);
+                    if (show) visible++;
+                });
+
+                invCount.textContent = visible;
+                emptyState.classList.toggle('d-none', visible > 0);
+            }
+
+            function clearFilters(){
+                searchBox.value = '';
+                statusFilter.value = '';
+                typeFilter.value = '';
+                fromDate.value = '';
+                toDate.value = '';
+                applyFilters();
+            }
+
+            [searchBox, statusFilter, typeFilter, fromDate, toDate].forEach(el => {
+                el.addEventListener('input', applyFilters);
+                el.addEventListener('change', applyFilters);
+            });
+            clearBtn.addEventListener('click', clearFilters);
+            emptyClear.addEventListener('click', clearFilters);
+
+            // simple sort (click header)
+            let sortDir = 1;
+            qa('thead th[data-sort]').forEach(th => {
+                th.style.cursor = 'pointer';
+                th.addEventListener('click', () => {
+                    const key = th.getAttribute('data-sort');
+                    const rows = qa('tr', table);
+                    rows.sort((a,b) => {
+                        const av = (key === 'date') ? a.dataset.date : a.dataset[key] || '';
+                        const bv = (key === 'date') ? b.dataset.date : b.dataset[key] || '';
+                        if (av < bv) return -1 * sortDir;
+                        if (av > bv) return 1 * sortDir;
+                        return 0;
+                    });
+                    sortDir *= -1;
+                    rows.forEach(r => table.appendChild(r));
+                });
+            });
+
+            applyFilters();
+        })();
+    </script>
+}

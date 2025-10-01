@@ -31,3 +31,14 @@
 
 /* Form helpers */
 .form-hint{ font-size:.9rem; color:#6b6b6b; }
+/* Researcher table tweaks */
+.table thead th { white-space: nowrap; }
+.badge.border { border-width: 1px; }
+.blood-badge {
+  background-color: #c1121f; /* deep red */
+  color: #fff;              /* white text */
+}
+.blood-o  { background-color: #ff4d4d; color: white; }
+.blood-a  { background-color: #4caf50; color: white; }
+.blood-b  { background-color: #2196f3; color: white; }
+.blood-ab { background-color: #9c27b0; color: white; }

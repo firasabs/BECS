@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
-[Authorize(Policy="Researcher")]
+[Authorize(Roles = "admin,researcher")]
 public class ResearcherController : Controller
 {
     private readonly IResearcherData _data;
