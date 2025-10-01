@@ -4,10 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Becs.Models;
 using Becs.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Becs.Controllers
 {
+    [Authorize(Roles = "admin,user")]
+
     public class DonationsController : Controller
     {
         private readonly IIntakeRepository _repo;

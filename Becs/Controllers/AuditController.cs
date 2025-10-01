@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 public sealed class AuditRow
 {
@@ -26,7 +27,7 @@ public sealed class AuditRow
     public string? PrevHash { get; set; }
     public string? Hash { get; set; }
 }
-
+[Authorize(Roles="admin")]
 public class AuditController : Controller
 {
     private readonly string _connStr;

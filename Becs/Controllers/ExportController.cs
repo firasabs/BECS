@@ -9,8 +9,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
-//[/*Authorize(Roles="Admin")*/] // enable in Part 3
+[Authorize(Roles="admin")] // hippa
 public class ExportController : Controller
 {
     private readonly string _connStr;

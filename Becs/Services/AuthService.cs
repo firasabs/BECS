@@ -13,9 +13,10 @@ public interface IAuthService
 
 public class AuthService : IAuthService
 {
-    public string HashPassword(string plaintext) => BCrypt.Net.BCrypt.HashPassword(plaintext, workFactor: 11);
-    public bool Verify(string plaintext, string hash) => BCrypt.Net.BCrypt.Verify(plaintext, hash);
-
+    public string HashPassword(string plaintext)
+        => BCrypt.Net.BCrypt.HashPassword(plaintext, workFactor: 11);
+    public bool Verify(string plaintext, string hash)
+        => BCrypt.Net.BCrypt.Verify(plaintext, hash);
     public async Task SignInAsync(HttpContext http, UserRecord user)
     {
         var claims = new List<Claim>

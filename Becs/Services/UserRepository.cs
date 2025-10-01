@@ -19,10 +19,18 @@ public class UserRepository : IUserRepository
         await con.OpenAsync();
         using var cmd = con.CreateCommand();
         cmd.CommandText = @"SELECT id, username, password_hash, role, last_login
-                            FROM Users WHERE username=@u LIMIT 1";
+                        FROM Users WHERE username=@u LIMIT 1";
         cmd.Parameters.AddWithValue("@u", username);
         using var r = await cmd.ExecuteReaderAsync();
         if (!await r.ReadAsync()) return null;
+
+        DateTime? lastLogin = null;
+        if (!r.IsDBNull(4))
+        {
+            var val = r.GetValue(4)?.ToString();
+            if (!string.IsNullOrWhiteSpace(val) && DateTime.TryParse(val, out var parsed))
+                lastLogin = parsed;
+        }
 
         return new UserRecord
         {
@@ -30,10 +38,10 @@ public class UserRepository : IUserRepository
             Username = r.GetString(1),
             PasswordHash = r.GetString(2),
             Role = r.GetString(3),
-            LastLogin = r.IsDBNull(4) ? null : r.GetDateTime(4)
+            LastLogin = lastLogin
         };
     }
-
+    
     public async Task<int> CreateAsync(string username, string passwordHash, string role)
     {
         using var con = new SqliteConnection(_cs);

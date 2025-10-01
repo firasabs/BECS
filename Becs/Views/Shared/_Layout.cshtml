@@ -1,4 +1,5 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@{
     var title = ViewData["Title"] as string ?? "BECS";
 }
 <!DOCTYPE html>
@@ -28,6 +29,32 @@
                 <li class="nav-item"><a class="nav-link" href="/Issue/Emergency"><i class="bi bi-exclamation-triangle"></i> ניפוק אר״ן</a></li>
             </ul>
         </div>
+        <ul class="navbar-nav ms-auto">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <li class="nav-item me-2">
+                    <span class="navbar-text">
+                        שלום, <strong>@User.Identity.Name</strong>
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> יציאה
+                        </button>
+                    </form>
+                </li>
+            }
+            else
+            {
+                <li class="nav-item">
+                    <a class="btn btn-outline-primary btn-sm" asp-controller="Auth" asp-action="Login">
+                        <i class="bi bi-box-arrow-in-right"></i> כניסה
+                    </a>
+                </li>
+            }
+        </ul>
     </nav>
     @await Html.PartialAsync("_TopNav")
     <div class="container">
