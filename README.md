@@ -1,14 +1,14 @@
-# BECS – Part 1
+# Part 2 – FDA 21 CFR Part 11 Additions
 
-This project is Part 1 of the BECS assignment. It implements the initial functionality of a blood establishment computer system using ASP.NET Core MVC with SQLite as the database.
-
-## Features Implemented in Part 1
-
-* Intake of donated blood units.
-* Issuing of blood units for routine and emergency use.
-* Validation of input fields.
-* Blood compatibility rules service.
-* Unit tests to verify core functionality.
+## 1. Audit Trail
+- New table: `audit_logs`
+- Captures every important action: donation creation, unit issue/discard, export run, etc.
+- **Per-request Correlation-Id** for traceability (`X-Correlation-Id` header).
+- **Tamper-evident hash chain**:  
+  Each row stores `prev_hash` + `hash` (SHA-256 over row content + pepper).  
+  If any record is altered, the chain breaks.
+- Request metadata logged: timestamp, actor, action, entity, IP, User-Agent, HTTP method, path.
+- **Immutable**: triggers prevent UPDATE/DELETE on `audit_logs`.
 
 ## Prerequisites
 
