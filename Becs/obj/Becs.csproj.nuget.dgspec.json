@@ -55,7 +55,19 @@
             },
             "Microsoft.Data.Sqlite": {
               "target": "Package",
-              "version": "[10.0.0-rc.1.25451.107, )"
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.Extensions.ML": {
+              "target": "Package",
+              "version": "[4.0.2, )"
+            },
+            "Microsoft.ML": {
+              "target": "Package",
+              "version": "[4.0.2, )"
+            },
+            "Microsoft.ML.FastTree": {
+              "target": "Package",
+              "version": "[4.0.2, )"
             },
             "xunit": {
               "target": "Package",

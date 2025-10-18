@@ -1,0 +1,22 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Predicted Demand";
+    var grouped = Model.GroupBy(m => (string)m.blood_type).OrderBy(g => g.Key);
+}
+<h2>Predicted Demand</h2>
+@foreach (var g in grouped)
+{
+    <div class="card mb-3">
+        <div class="card-header"><strong>@g.Key</strong></div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead><tr><th>Rh</th><th>Predicted Units</th><th>Model</th></tr></thead>
+                <tbody>
+                @foreach (var x in g) {
+                    <tr><td>@x.rh</td><td>@x.predicted_units</td><td>@x.model_version</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

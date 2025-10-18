@@ -1,0 +1,15 @@
+# build
+bin/
+obj/
+
+# local dbs
+becs.db
+/data/
+*.db
+
+# ML artifacts
+MLModels/*.zip
+
+# OS/editor
+.DS_Store
+.vscode/

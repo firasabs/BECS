@@ -9,7 +9,10 @@
     <ItemGroup>
       <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
       <PackageReference Include="FluentAssertions" Version="8.6.0" />
-      <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0-rc.1.25451.107" />
+      <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.9" />
+      <PackageReference Include="Microsoft.Extensions.ML" Version="4.0.2" />
+      <PackageReference Include="Microsoft.ML" Version="4.0.2" />
+      <PackageReference Include="Microsoft.ML.FastTree" Version="4.0.2" />
       <PackageReference Include="xunit" Version="2.9.3" />
     </ItemGroup>
 
