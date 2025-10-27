@@ -1,0 +1,204 @@
+@using System.Text.Json
+@using System.Linq
+@model List<Becs.ML.ForecastRowVm>
+
+@{
+  ViewData["Title"] = "Predicted Demand";
+  int year = (int)ViewBag.Year;
+  int month = (int)ViewBag.Month;
+  string horizon = (string)ViewBag.Horizon ?? "single";
+  string source  = (string)ViewBag.Source  ?? "live";
+
+  var monthName = new DateTime(2000, Math.Clamp(month,1,12), 1).ToString("MMMM");
+
+  // Build BOTH chart datasets (small, cheap), we’ll pick in JS:
+  var chartDataYear = Enumerable.Range(1,12).Select(mo => new {
+    month = new DateTime(2000, mo, 1).ToString("MMM"),
+    O  = Model.Where(r => r.Month==mo && r.BloodType=="O").Sum(r => r.PredictedUnits),
+    A  = Model.Where(r => r.Month==mo && r.BloodType=="A").Sum(r => r.PredictedUnits),
+    B  = Model.Where(r => r.Month==mo && r.BloodType=="B").Sum(r => r.PredictedUnits),
+    AB = Model.Where(r => r.Month==mo && r.BloodType=="AB").Sum(r => r.PredictedUnits)
+  }).ToList();
+
+  var chartDataSingle = new [] {
+    new { blood="O",  total=Model.Where(r=>r.BloodType=="O").Sum(r=>r.PredictedUnits) },
+    new { blood="A",  total=Model.Where(r=>r.BloodType=="A").Sum(r=>r.PredictedUnits) },
+    new { blood="B",  total=Model.Where(r=>r.BloodType=="B").Sum(r=>r.PredictedUnits) },
+    new { blood="AB", total=Model.Where(r=>r.BloodType=="AB").Sum(r=>r.PredictedUnits) }
+  };
+}
+
+<style>
+  .page-actions { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+  .sticky-actions { position:sticky; top:0; background:var(--bs-body-bg,#fff); z-index:10; padding:.5rem 0; }
+  .units-high { color:#dc3545; font-weight:700; }
+  .units-med  { color:#fd7e14; font-weight:600; }
+  .units-low  { color:#6c757d; }
+  .card-header small { font-weight:500; color:#6c757d; }
+</style>
+
+
+<div class="d-flex justify-content-between align-items-center mb-2 sticky-actions">
+  <h2 class="m-0">Predicted Demand</h2>
+  <form method="get" class="page-actions">
+    <select name="horizon" class="form-select form-select-sm" style="width:140px">
+      <option value="single" selected="@("single"==horizon)">Single month</option>
+      <option value="year"   selected="@("year"==horizon)">Jan–Dec</option>
+    </select>
+    <input type="number" class="form-control form-control-sm" name="year" value="@year" style="width:100px" />
+    <input type="number" class="form-control form-control-sm" name="month" value="@month" min="1" max="12" style="width:90px" @(horizon=="year" ? "disabled" : "") />
+    <select name="source" class="form-select form-select-sm" style="width:130px">
+      <option value="live"   selected="@("live"==source)">Live</option>
+      <option value="stored" selected="@("stored"==source)">Stored</option>
+    </select>
+    <button class="btn btn-sm btn-primary">Apply</button>
+  </form>
+  <div class="page-actions">
+    <input id="bloodFilter" class="form-control form-control-sm" placeholder="Filter blood type (e.g. A, O, AB)" style="width:220px" />
+    <select id="rhFilter" class="form-select form-select-sm" style="width:140px">
+      <option value="">All Rh</option><option value="+">Rh +</option><option value="-">Rh -</option>
+    </select>
+    <button id="toggleChart" class="btn btn-sm btn-outline-secondary">Toggle Chart</button>
+    <button id="btnExport" class="btn btn-sm btn-primary">Export CSV</button>
+  </div>
+</div>
+
+<div class="mb-2 text-muted">
+  @if (horizon=="single")
+  { <span>Showing <strong>@monthName @year</strong> (@source)</span> }
+  else
+  { <span>Showing <strong>Jan–Dec @year</strong> (@source)</span> }
+</div>
+
+<div id="chartWrap" class="mb-3">
+  <canvas id="forecastChart" height="120"></canvas>
+</div>
+
+@functions {
+  string UnitsClass(int u) => u >= 50 ? "units-high" : (u >= 20 ? "units-med" : "units-low");
+  string RhBadgeClass(string rh) => rh == "+" ? "bg-secondary" : "bg-dark";
+}
+
+@if (horizon == "year")
+{
+  @foreach (var g in Model
+              .GroupBy(m => new { m.Month, m.BloodType })
+              .OrderBy(grp => grp.Key.Month)
+              .ThenBy(grp => grp.Key.BloodType))
+  {
+    var gMonth = g.Key.Month;
+    var title  = new DateTime(2000, gMonth, 1).ToString("MMMM");
+    var groupTotal = g.Sum(x => x.PredictedUnits);
+
+    <div class="card mb-3 forecast-group" data-blood="@g.Key.BloodType" data-month="@gMonth">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <strong class="me-2">@title</strong>
+          <small>@g.Key.BloodType • Total:
+            <span class="@UnitsClass(groupTotal)">@groupTotal</span>
+          </small>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0 align-middle">
+          <thead class="table-light">
+          <tr><th>Rh</th><th>Predicted Units</th><th>Model</th></tr>
+          </thead>
+          <tbody>
+          @foreach (var x in g.OrderBy(r => r.Rh))
+          {
+            <tr data-rh="@x.Rh">
+              <td><span class="badge @RhBadgeClass(x.Rh)">@x.Rh</span></td>
+              <td class="@UnitsClass(x.PredictedUnits)">@x.PredictedUnits</td>
+              <td><span class="badge rounded-pill text-bg-info">@x.ModelVersion</span></td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+}
+}
+else
+{
+  @{
+    var groupedSingle = Model
+      .GroupBy(m => m.BloodType)
+      .OrderBy(g => g.Key);
+  } @* close the @{ } block *@
+
+  @foreach(var g in groupedSingle)
+  {
+    var groupTotal = g.Sum(x => x.PredictedUnits);
+
+    <div class="card mb-3 forecast-group" data-blood="@g.Key">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <strong class="me-2">@g.Key</strong>
+          <small>Group total: <span class="@UnitsClass(groupTotal)">@groupTotal</span></small>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0 align-middle">
+          <thead class="table-light"><tr><th>Rh</th><th>Predicted Units</th><th>Model</th></tr></thead>
+          <tbody>
+          @foreach (var x in g.OrderBy(r => r.Rh))
+          {
+            <tr data-rh="@x.Rh">
+              <td><span class="badge @RhBadgeClass(x.Rh)">@x.Rh</span></td>
+              <td class="@UnitsClass(x.PredictedUnits)">@x.PredictedUnits</td>
+              <td><span class="badge rounded-pill text-bg-info">@x.ModelVersion</span></td>
+            </tr>
+          }
+          </tbody>
+          <tfoot>
+          <tr class="table-active">
+            <td class="text-end"><strong>Total</strong></td>
+            <td class="@UnitsClass(groupTotal)"><strong>@groupTotal</strong></td>
+            <td></td>
+          </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  }
+}
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const horizon = "@horizon";
+  const chartDataYear   = @Html.Raw(JsonSerializer.Serialize(chartDataYear));
+  const chartDataSingle = @Html.Raw(JsonSerializer.Serialize(chartDataSingle));
+
+  const ctx = document.getElementById('forecastChart');
+  let chart;
+
+  if (horizon === "year") {
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartDataYear.map(d => d.month),
+        datasets: [
+          { label: 'O',  data: chartDataYear.map(d => d.O),  stack: 'bt' },
+          { label: 'A',  data: chartDataYear.map(d => d.A),  stack: 'bt' },
+          { label: 'B',  data: chartDataYear.map(d => d.B),  stack: 'bt' },
+          { label: 'AB', data: chartDataYear.map(d => d.AB), stack: 'bt' }
+        ]
+      },
+      options: { responsive:true, scales: { y: { beginAtZero:true, ticks:{precision:0} } } }
+    });
+  } else {
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartDataSingle.map(d=>d.blood),
+        datasets: [{ label:'Total predicted units', data: chartDataSingle.map(d=>d.total) }]
+      },
+      options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{precision:0} } } }
+    });
+  }
+</script>
+

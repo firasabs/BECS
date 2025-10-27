@@ -20,9 +20,12 @@
             }
 
             <form method="post" asp-action="Create" class="row g-3">
+                @Html.AntiForgeryToken()
+
+                <!-- פרטי יחידה -->
                 <div class="col-6 col-md-3">
                     <label class="form-label">סוג ABO</label>
-                    <select asp-for="ABO" class="form-select">
+                    <select asp-for="ABO" class="form-select" id="ABO">
                         <option>O</option><option>A</option><option>B</option><option>AB</option>
                     </select>
                     <span asp-validation-for="ABO" class="text-danger"></span>
@@ -30,7 +33,7 @@
 
                 <div class="col-6 col-md-2">
                     <label class="form-label">Rh</label>
-                    <select asp-for="RhSign" class="form-select">
+                    <select asp-for="RhSign" class="form-select" id="RhSign">
                         <option>+</option><option>-</option>
                     </select>
                     <span asp-validation-for="RhSign" class="text-danger"></span>
@@ -38,25 +41,85 @@
 
                 <div class="col-6 col-md-3">
                     <label class="form-label">תאריך תרומה</label>
-                    <input asp-for="DonationDate" type="date" class="form-control" />
+                    <input asp-for="DonationDate" type="date" class="form-control" id="DonationDate" />
                     <span asp-validation-for="DonationDate" class="text-danger"></span>
                 </div>
 
                 <div class="col-6 col-md-2">
                     <label class="form-label">ת״ז תורם</label>
-                    <input asp-for="DonorId" class="form-control" placeholder="9 ספרות" />
+                    <input asp-for="DonorId" class="form-control" placeholder="9 ספרות" id="DonorId" />
                     <span asp-validation-for="DonorId" class="text-danger"></span>
                 </div>
 
                 <div class="col-12 col-md-4">
                     <label class="form-label">שם מלא</label>
-                    <input asp-for="DonorName" class="form-control" placeholder="שם פרטי ומשפחה" />
+                    <input asp-for="DonorName" class="form-control" placeholder="שם פרטי ומשפחה" id="DonorName" />
                     <span asp-validation-for="DonorName" class="text-danger"></span>
                 </div>
 
+                <!-- ====== נתוני תורם (AI Eligibility) ====== -->
                 <div class="col-12">
-                    <button class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> קלוט למלאי</button>
+                    <h6 class="mb-2">נתוני תורם (בדיקת כשירות)</h6>
+                    <div class="row g-2">
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">Hb (g/dL)</label>
+                            <input id="hb_g_dl" type="number" step="0.1" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">גיל</label>
+                            <input id="age" type="number" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">סיסטולי</label>
+                            <input id="bp_systolic" type="number" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">דיאסטולי</label>
+                            <input id="bp_diastolic" type="number" class="form-control" />
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label class="form-label">ימים מאז תרומה</label>
+                            <input id="days_since_last_donation" type="number" class="form-control" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">מצבים רפואיים (מופרד בפסיקים)</label>
+                            <input id="conditions" class="form-control" placeholder="למשל: none, allergy:penicillin" />
+                        </div>
+                    </div>
                 </div>
+
+                <!-- כפתורים + פאנל כשירות -->
+                <div class="col-12 mt-2">
+                    <button id="btnEligCheck" type="button" class="btn btn-outline-secondary">
+                        <i class="bi bi-robot me-1"></i> בדיקת כשירות (AI)
+                    </button>
+                    <button id="btnSubmit" class="btn btn-primary ms-2">
+                        <i class="bi bi-plus-circle me-1"></i> קלוט למלאי
+                    </button>
+                </div>
+
+                <div class="col-12">
+                    <div id="eligPanel" class="alert d-none mt-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong id="eligVerdict"></strong>
+                                <span class="ms-2 text-secondary">Model: <span id="eligModel"></span></span>
+                            </div>
+                            <div class="small">Confidence: <span id="eligScore" class="fw-semibold"></span></div>
+                        </div>
+                        <ul id="eligReasons" class="small mb-2 mt-2"></ul>
+                        <div id="eligNext" class="small text-muted"></div>
+
+                        <div id="eligOverride" class="mt-2 d-none">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="chkOverride">
+                                <label class="form-check-label" for="chkOverride">עקוף החלטת AI (דורש נימוק; נשמר בביקורת)</label>
+                            </div>
+                            <textarea id="txtOverride" class="form-control form-control-sm mt-2" rows="2" placeholder="נימוק לעקיפה…"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <!-- ====== /AI Eligibility ====== -->
             </form>
         </div>
     </div>
@@ -76,15 +139,14 @@
                     <tbody>
                     @foreach (var u in units)
                     {
-                        var key = $"{u.ABO}{u.Rh}";
                         var cls = u.ABO switch { "O" => "bt-o", "A" => "bt-a", "B" => "bt-b", "AB" => "bt-ab", _ => "" };
                         <tr>
                             <td class="text-secondary">@u.Id</td>
                             <td>
-                  <span class="bt-pill @cls">
-                    <i class="bi bi-droplet-half"></i>
-                    <span class="fw-bold">@u.ABO</span><span class="rh">@u.Rh</span>
-                  </span>
+                                <span class="bt-pill @cls">
+                                    <i class="bi bi-droplet-half"></i>
+                                    <span class="fw-bold">@u.ABO</span><span class="rh">@u.Rh</span>
+                                </span>
                             </td>
                             <td>@u.DonationDate.ToString("yyyy-MM-dd")</td>
                             <td class="text-monospace">@u.DonorId</td>
@@ -101,4 +163,109 @@
 
 @section Scripts{
     <partial name="_ValidationScriptsPartial" />
+    <script>
+      const $form = document.querySelector('form[asp-action="Create"]');
+      const $btnCheck = document.getElementById('btnEligCheck');
+      const panel = document.getElementById('eligPanel');
+      const elVerdict = document.getElementById('eligVerdict');
+      const elModel = document.getElementById('eligModel');
+      const elScore = document.getElementById('eligScore');
+      const elReasons = document.getElementById('eligReasons');
+      const elNext = document.getElementById('eligNext');
+      const elOverride = document.getElementById('eligOverride');
+      const chkOverride = document.getElementById('chkOverride');
+      const txtOverride = document.getElementById('txtOverride');
+      const token = (document.querySelector('input[name="__RequestVerificationToken"]')||{}).value || '';
+
+      let lastEligibility = null;
+
+      function collectPayload(saveFlag){
+        return {
+          hb_g_dl: parseFloat(document.getElementById('hb_g_dl')?.value || 0) || 0,
+          age: parseInt(document.getElementById('age')?.value || 0) || 0,
+          bp_systolic: parseInt(document.getElementById('bp_systolic')?.value || 0) || 0,
+          bp_diastolic: parseInt(document.getElementById('bp_diastolic')?.value || 0) || 0,
+          days_since_last_donation: parseInt(document.getElementById('days_since_last_donation')?.value || 0) || 0,
+          conditions: (document.getElementById('conditions')?.value || '').trim(),
+          donor_id: (document.getElementById('DonorId')||{}).value || '',
+          save: !!saveFlag
+        };
+      }
+
+      async function callEligibility(saveFlag){
+        const payload = collectPayload(saveFlag);
+
+        panel.classList.remove('d-none','alert-success','alert-danger','alert-warning');
+        panel.classList.add('alert','alert-info');
+        elVerdict.textContent = 'בודק כשירות…';
+        elModel.textContent = ''; elScore.textContent = ''; elReasons.innerHTML = ''; elNext.textContent = '';
+
+        const res = await fetch('/ai/eligibility', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'RequestVerificationToken': token},
+          body: JSON.stringify(payload)
+        });
+
+        if(!res.ok){
+          elVerdict.textContent = 'שגיאה בבדיקת כשירות';
+          panel.classList.remove('alert-info'); panel.classList.add('alert-danger');
+          return null;
+        }
+
+        const data = await res.json();
+        lastEligibility = data;
+
+        const eligible = !!data.eligible_pred;
+        const conf = Math.round(((data.probability||0)*100));
+        elVerdict.textContent = eligible ? 'כשר' : 'לא כשר';
+        elModel.textContent = data.model_version || '';
+        elScore.textContent = conf + '%';
+
+        const expl = (data.explanation || '').split(/;|\n/).map(s=>s.trim()).filter(Boolean);
+        elReasons.innerHTML = expl.map(r=>`<li>${r}</li>`).join('');
+        elNext.textContent = ''; // אם תוסיף nextEligibleDate בעתיד – הצג כאן
+
+        panel.classList.remove('alert-info','alert-success','alert-danger');
+        panel.classList.add(eligible ? 'alert-success' : 'alert-danger');
+        elOverride.classList.toggle('d-none', eligible);
+
+        if (saveFlag) data._saved = true;
+        return data;
+      }
+
+      // בדיקת AI
+      $btnCheck.addEventListener('click', ()=>callEligibility(false));
+
+      // שמירה סופית: נשמור גם את התחזית (save:true) ונדרוש נימוק על עקיפה
+      $form.addEventListener('submit', async (e)=>{
+        if (!lastEligibility || lastEligibility._saved !== true) {
+          const saved = await callEligibility(true);
+          if (saved) saved._saved = true;
+        }
+
+        if (lastEligibility && lastEligibility.eligible_pred === false) {
+          if (!chkOverride?.checked || (txtOverride?.value||'').trim().length < 5) {
+            e.preventDefault();
+            panel.classList.remove('d-none');
+            elOverride.classList.remove('d-none');
+            txtOverride?.classList.add('is-invalid');
+            return;
+          }
+        }
+
+        // צרף צילום מצב + נימוק לעקיפה (אם יש) לשמירת ביקורת בשרת
+        if (lastEligibility) {
+          const snap = document.createElement('input');
+          snap.type = 'hidden'; snap.name = 'EligibilitySnapshotJson';
+          snap.value = JSON.stringify(lastEligibility);
+          $form.appendChild(snap);
+        }
+        if (chkOverride?.checked) {
+          const note = document.createElement('input');
+          note.type = 'hidden'; note.name = 'EligibilityOverrideNote';
+          note.value = txtOverride.value.trim();
+          $form.appendChild(note);
+        }
+      });
+    </script>
 }

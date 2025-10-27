@@ -1,3 +1,4 @@
+using Becs.ML;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Becs.Services;
@@ -24,40 +25,71 @@ public class AiController : Controller
 
     // GET /ai/forecast?month=10&save=true -> returns View or JSON if header asks for JSON
     [HttpGet("forecast")]
-    public IActionResult Forecast([FromQuery] int month = 1, [FromQuery] bool save = false, [FromQuery] int? year = null)
+   public IActionResult Forecasts(int year = 2025, int month = 1, string horizon = "single", string source = "live")
+{
+    // horizon: "single" | "year"
+    // source:  "live"   | "stored"
+    var rows = new List<ForecastRowVm>();
+    var months = horizon == "year" ? Enumerable.Range(1, 12) : new[] { month };
+
+    if (string.Equals(source, "stored", StringComparison.OrdinalIgnoreCase))
     {
-        var items = _ai.PredictDemandForMonth(month)
-            .Select(x => new { blood_type = x.bt, rh = x.rh, predicted_units = x.units, model_version = x.ver })
-            .ToList();
-
-        if (save)
+        // read from Forecasts table if present; fall back to live if empty
+        using var con = new SqliteConnection(ConnStr);
+        con.Open();
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = @"
+            CREATE TABLE IF NOT EXISTS Forecasts (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              year INTEGER NOT NULL,
+              month INTEGER NOT NULL CHECK(month BETWEEN 1 AND 12),
+              blood_type TEXT NOT NULL CHECK(blood_type IN ('O','A','B','AB')),
+              rh TEXT NOT NULL CHECK(rh IN ('+','-')),
+              predicted_units INTEGER NOT NULL,
+              model_version TEXT NOT NULL,
+              created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE(year, month, blood_type, rh, model_version)
+            );
+            SELECT year, month, blood_type, rh, predicted_units, model_version
+            FROM Forecasts
+            WHERE year = $y AND month IN (" + string.Join(",", months) + @")
+            ORDER BY month, blood_type, rh;";
+        cmd.Parameters.AddWithValue("$y", year);
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
         {
-            var y = year ?? DateTime.UtcNow.Year;
-            using var con = new SqliteConnection(ConnStr);
-            con.Open();
+            rows.Add(new ForecastRowVm {
+                Year = r.GetInt32(0),
+                Month = r.GetInt32(1),
+                BloodType = r.GetString(2),
+                Rh = r.GetString(3),
+                PredictedUnits = r.GetInt32(4),
+                ModelVersion = r.GetString(5)
+            });
+        }
+    }
 
-            foreach (var it in items)
+    if (rows.Count == 0) // live compute (current behavior), for 1 or 12 months
+    {
+        foreach (var m in months)
+        {
+            var preds = _ai.PredictDemandForMonth(m).ToList(); // (bt,rh,units,ver)
+            foreach (var p in preds)
             {
-                using var cmd = con.CreateCommand();
-                cmd.CommandText = @"
-INSERT OR REPLACE INTO Forecasts(year,month,blood_type,rh,predicted_units,model_version)
-VALUES($year,$month,$bt,$rh,$u,$ver);";
-                cmd.Parameters.AddWithValue("$year", y);
-                cmd.Parameters.AddWithValue("$month", month);
-                cmd.Parameters.AddWithValue("$bt", it.blood_type);
-                cmd.Parameters.AddWithValue("$rh", it.rh);
-                cmd.Parameters.AddWithValue("$u", it.predicted_units);
-                cmd.Parameters.AddWithValue("$ver", it.model_version);
-                cmd.ExecuteNonQuery();
+                rows.Add(new ForecastRowVm {
+                    Year = year, Month = m, BloodType = p.bt, Rh = p.rh,
+                    PredictedUnits = p.units, ModelVersion = p.ver
+                });
             }
         }
-
-        // If you're testing, JSON is convenient:
-        if (Request.Headers["Accept"].ToString().Contains("application/json", StringComparison.OrdinalIgnoreCase))
-            return Json(items);
-
-        return View(items); // Views/Ai/Forecast.cshtml (optional). If missing, return Json(items) instead.
     }
+
+    ViewBag.Year = year;
+    ViewBag.Month = month;
+    ViewBag.Horizon = horizon; // "single" or "year"
+    ViewBag.Source = source;   // "live" or "stored"
+    return View(rows);
+}
 
     // ---------------------------
     // 2) CROSS-MATCH
