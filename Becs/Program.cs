@@ -7,7 +7,7 @@ using Microsoft.Extensions.ML;
 using Microsoft.ML;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddMlModels(builder.Configuration);
 // canonical model paths (absolute, under content root)
 string DemandZip = Path.Combine(builder.Environment.ContentRootPath, "MLModels", "demandModel.zip");
 string EligZip   = Path.Combine(builder.Environment.ContentRootPath, "MLModels", "eligibilityModel.zip");

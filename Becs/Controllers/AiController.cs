@@ -109,7 +109,7 @@ public class AiController : Controller
 
     public class EligibilityBody
     {
-        public int donor_id { get; set; }
+        public int? donor_id { get; set; }
         public float hb_g_dl { get; set; }
         public int age { get; set; }
         public int bp_systolic { get; set; }
@@ -123,26 +123,36 @@ public class AiController : Controller
     [HttpPost("eligibility")]
     public IActionResult Eligibility([FromBody] EligibilityBody body)
     {
-        var (eligible, proba, ver, why) =
-            _ai.PredictEligibility(body.hb_g_dl, body.age, body.bp_systolic, body.bp_diastolic,
-                                   body.days_since_last_donation, body.conditions);
-
-        if (body.save)
+        try
         {
-            using var con = new SqliteConnection(ConnStr);
-            con.Open();
-            using var cmd = con.CreateCommand();
-            cmd.CommandText = @"
+            var (eligible, proba, ver, why) = _ai.PredictEligibility(
+                body.hb_g_dl, body.age, body.bp_systolic, body.bp_diastolic,
+                body.days_since_last_donation, body.conditions);
+
+            if (body.save)
+            {
+                using var con = new SqliteConnection(ConnStr);
+                con.Open();
+                using var cmd = con.CreateCommand();
+                cmd.CommandText = @"
 INSERT INTO EligibilityPredictions(donor_id, eligible_pred, probability, model_version, explanation)
 VALUES($id, $pred, $p, $ver, $exp);";
-            cmd.Parameters.AddWithValue("$id", body.donor_id);
-            cmd.Parameters.AddWithValue("$pred", eligible ? 1 : 0);
-            cmd.Parameters.AddWithValue("$p", proba);
-            cmd.Parameters.AddWithValue("$ver", ver);
-            cmd.Parameters.AddWithValue("$exp", why);
-            cmd.ExecuteNonQuery();
-        }
+                cmd.Parameters.AddWithValue("$id", body.donor_id);
+                cmd.Parameters.AddWithValue("$pred", eligible ? 1 : 0);
+                cmd.Parameters.AddWithValue("$p", proba);
+                cmd.Parameters.AddWithValue("$ver", ver ?? "EligibilityModel");
+                cmd.Parameters.AddWithValue("$exp", why ?? "Model decision.");
+                cmd.ExecuteNonQuery();
+            }
 
-        return Json(new { eligible_pred = eligible, probability = proba, model_version = ver, explanation = why });
+            return Ok(new { eligible_pred = eligible, probability = proba, model_version = ver, explanation = why });
+        }
+        catch (Exception ex)
+        {
+            // TEMP: surface details so you can see them in the browser console
+            return Problem(ex.ToString());
+        }
     }
+
+
 }

@@ -19,7 +19,7 @@
                 <div class="alert alert-success"><i class="bi bi-check2-circle me-1"></i> @ok</div>
             }
 
-            <form method="post" asp-action="Create" class="row g-3">
+            <form id="donationForm" method="post" asp-action="Create" class="row g-3">
                 @Html.AntiForgeryToken()
 
                 <!-- פרטי יחידה -->
@@ -162,110 +162,135 @@
 </div>
 
 @section Scripts{
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-      const $form = document.querySelector('form[asp-action="Create"]');
-      const $btnCheck = document.getElementById('btnEligCheck');
-      const panel = document.getElementById('eligPanel');
-      const elVerdict = document.getElementById('eligVerdict');
-      const elModel = document.getElementById('eligModel');
-      const elScore = document.getElementById('eligScore');
-      const elReasons = document.getElementById('eligReasons');
-      const elNext = document.getElementById('eligNext');
+  <partial name="_ValidationScriptsPartial" />
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form       = document.getElementById('donationForm');
+      const btnCheck   = document.getElementById('btnEligCheck');
+      const panel      = document.getElementById('eligPanel');
+      const elVerdict  = document.getElementById('eligVerdict');
+      const elModel    = document.getElementById('eligModel');
+      const elScore    = document.getElementById('eligScore');
+      const elReasons  = document.getElementById('eligReasons');
+      const elNext     = document.getElementById('eligNext');
       const elOverride = document.getElementById('eligOverride');
-      const chkOverride = document.getElementById('chkOverride');
-      const txtOverride = document.getElementById('txtOverride');
+      const chkOverride= document.getElementById('chkOverride');
+      const txtOverride= document.getElementById('txtOverride');
       const token = (document.querySelector('input[name="__RequestVerificationToken"]')||{}).value || '';
 
       let lastEligibility = null;
 
       function collectPayload(saveFlag){
+        const donorIdRaw = (document.getElementById('DonorId') || {}).value || '0';
+        const donorId = parseInt(donorIdRaw, 10) || 0;
+        const conds = (document.getElementById('conditions')?.value || '')
+          .split(',').map(s=>s.trim()).filter(Boolean);
+
         return {
           hb_g_dl: parseFloat(document.getElementById('hb_g_dl')?.value || 0) || 0,
           age: parseInt(document.getElementById('age')?.value || 0) || 0,
           bp_systolic: parseInt(document.getElementById('bp_systolic')?.value || 0) || 0,
           bp_diastolic: parseInt(document.getElementById('bp_diastolic')?.value || 0) || 0,
           days_since_last_donation: parseInt(document.getElementById('days_since_last_donation')?.value || 0) || 0,
-          conditions: (document.getElementById('conditions')?.value || '').trim(),
-          donor_id: (document.getElementById('DonorId')||{}).value || '',
+          conditions: conds,      // matches string[] on server
+          donor_id: donorId,      // int, not ""
           save: !!saveFlag
         };
       }
 
       async function callEligibility(saveFlag){
-        const payload = collectPayload(saveFlag);
+        try{
+          const payload = collectPayload(saveFlag);
 
-        panel.classList.remove('d-none','alert-success','alert-danger','alert-warning');
-        panel.classList.add('alert','alert-info');
-        elVerdict.textContent = 'בודק כשירות…';
-        elModel.textContent = ''; elScore.textContent = ''; elReasons.innerHTML = ''; elNext.textContent = '';
+          panel.classList.remove('d-none','alert-success','alert-danger','alert-warning');
+          panel.classList.add('alert','alert-info');
+          elVerdict.textContent = 'בודק כשירות…';
+          elModel.textContent = ''; elScore.textContent=''; elReasons.innerHTML=''; elNext.textContent='';
 
-        const res = await fetch('/ai/eligibility', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json', 'RequestVerificationToken': token},
-          body: JSON.stringify(payload)
-        });
+          const res = await fetch('/ai/eligibility', {
+            method: 'POST',
+            credentials: 'same-origin', // send antiforgery cookie
+            headers: {
+              'Content-Type': 'application/json',
+              'RequestVerificationToken': token
+            },
+            body: JSON.stringify(payload)
+          });
 
-        if(!res.ok){
+          if(!res.ok){
+            const txt = await res.text();
+            console.error('eligibility error', res.status, txt);
+            elVerdict.textContent = 'שגיאה בבדיקת כשירות';
+            panel.classList.remove('alert-info'); panel.classList.add('alert-danger');
+            return null;
+          }
+
+          const data = await res.json();
+          lastEligibility = data;
+
+          const eligible = !!data.eligible_pred;
+          const conf = Math.round(((data.probability||0)*100));
+          elVerdict.textContent = eligible ? 'כשר' : 'לא כשר';
+          elModel.textContent = data.model_version || '';
+          elScore.textContent = conf + '%';
+
+          const expl = (data.explanation || '').split(/;|\n/).map(s=>s.trim()).filter(Boolean);
+          elReasons.innerHTML = expl.map(r=>`<li>${r}</li>`).join('');
+          elNext.textContent = '';
+
+          panel.classList.remove('alert-info','alert-success','alert-danger');
+          panel.classList.add(eligible ? 'alert-success' : 'alert-danger');
+          elOverride.classList.toggle('d-none', eligible);
+
+          if (saveFlag) data._saved = true;
+          return data;
+        } catch(err){
+          console.error(err);
           elVerdict.textContent = 'שגיאה בבדיקת כשירות';
           panel.classList.remove('alert-info'); panel.classList.add('alert-danger');
           return null;
         }
-
-        const data = await res.json();
-        lastEligibility = data;
-
-        const eligible = !!data.eligible_pred;
-        const conf = Math.round(((data.probability||0)*100));
-        elVerdict.textContent = eligible ? 'כשר' : 'לא כשר';
-        elModel.textContent = data.model_version || '';
-        elScore.textContent = conf + '%';
-
-        const expl = (data.explanation || '').split(/;|\n/).map(s=>s.trim()).filter(Boolean);
-        elReasons.innerHTML = expl.map(r=>`<li>${r}</li>`).join('');
-        elNext.textContent = ''; // אם תוסיף nextEligibleDate בעתיד – הצג כאן
-
-        panel.classList.remove('alert-info','alert-success','alert-danger');
-        panel.classList.add(eligible ? 'alert-success' : 'alert-danger');
-        elOverride.classList.toggle('d-none', eligible);
-
-        if (saveFlag) data._saved = true;
-        return data;
       }
 
-      // בדיקת AI
-      $btnCheck.addEventListener('click', ()=>callEligibility(false));
+      // Button: AI check
+      if (btnCheck) {
+        btnCheck.addEventListener('click', (e) => {
+          e.preventDefault();
+          callEligibility(false);
+        });
+      }
 
-      // שמירה סופית: נשמור גם את התחזית (save:true) ונדרוש נימוק על עקיפה
-      $form.addEventListener('submit', async (e)=>{
-        if (!lastEligibility || lastEligibility._saved !== true) {
-          const saved = await callEligibility(true);
-          if (saved) saved._saved = true;
-        }
-
-        if (lastEligibility && lastEligibility.eligible_pred === false) {
-          if (!chkOverride?.checked || (txtOverride?.value||'').trim().length < 5) {
-            e.preventDefault();
-            panel.classList.remove('d-none');
-            elOverride.classList.remove('d-none');
-            txtOverride?.classList.add('is-invalid');
-            return;
+      // Form submit (only if form exists)
+      if (form) {
+        form.addEventListener('submit', async (e)=>{
+          if (!lastEligibility || lastEligibility._saved !== true) {
+            const saved = await callEligibility(true);
+            if (saved) saved._saved = true;
           }
-        }
-
-        // צרף צילום מצב + נימוק לעקיפה (אם יש) לשמירת ביקורת בשרת
-        if (lastEligibility) {
-          const snap = document.createElement('input');
-          snap.type = 'hidden'; snap.name = 'EligibilitySnapshotJson';
-          snap.value = JSON.stringify(lastEligibility);
-          $form.appendChild(snap);
-        }
-        if (chkOverride?.checked) {
-          const note = document.createElement('input');
-          note.type = 'hidden'; note.name = 'EligibilityOverrideNote';
-          note.value = txtOverride.value.trim();
-          $form.appendChild(note);
-        }
-      });
-    </script>
+          if (lastEligibility && lastEligibility.eligible_pred === false) {
+            if (!chkOverride?.checked || (txtOverride?.value||'').trim().length < 5) {
+              e.preventDefault();
+              panel.classList.remove('d-none');
+              elOverride.classList.remove('d-none');
+              txtOverride?.classList.add('is-invalid');
+              return;
+            }
+          }
+          if (lastEligibility) {
+            const snap = document.createElement('input');
+            snap.type = 'hidden'; snap.name = 'EligibilitySnapshotJson';
+            snap.value = JSON.stringify(lastEligibility);
+            form.appendChild(snap);
+          }
+          if (chkOverride?.checked) {
+            const note = document.createElement('input');
+            note.type = 'hidden'; note.name = 'EligibilityOverrideNote';
+            note.value = txtOverride.value.trim();
+            form.appendChild(note);
+          }
+        });
+      }
+    });
+  </script>
 }
+

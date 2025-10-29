@@ -2,11 +2,12 @@ using Microsoft.Data.Sqlite;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using System.Data;
+using Microsoft.ML.Transforms;
 using Microsoft.ML.Transforms.Text;
 
 namespace Becs.ML;
 
-public static class Trainers
+public static partial class Trainers
 {
     // --- Demand regression ---
     public static void TrainDemandFromSqlite(string conn, string modelPath)
@@ -137,14 +138,14 @@ public static void TrainEligibilityFromSqlite(string conn, string modelPath)
 
     var pipeline =
         ml.Transforms.CustomMapping(map, contractName: "CondFlagMap")
-        .Append(ml.Transforms.Concatenate("Features",
-            nameof(EligibilityInput.Hb_g_dl),
-            nameof(EligibilityInput.Age),
-            nameof(EligibilityInput.Bp_Systolic),
-            nameof(EligibilityInput.Bp_Diastolic),
-            nameof(EligibilityInput.Days_Since_Last_Donation),
-            nameof(CondMapOut.CondFlag)))
-        .Append(ml.BinaryClassification.Trainers.FastTree());
+            .Append(ml.Transforms.Concatenate("Features",
+                nameof(EligibilityInput.Hb_g_dl),
+                nameof(EligibilityInput.Age),
+                nameof(EligibilityInput.Bp_Systolic),
+                nameof(EligibilityInput.Bp_Diastolic),
+                nameof(EligibilityInput.Days_Since_Last_Donation),
+                nameof(CondMapOut.CondFlag)))
+            .Append(ml.BinaryClassification.Trainers.FastTree());
 
     var model = pipeline.Fit(dvTrain);
 
@@ -167,9 +168,9 @@ public static void TrainEligibilityFromSqlite(string conn, string modelPath)
     Console.WriteLine($"[Eligibility] Saved {modelPath}");
 }
 
-// Helper DTOs for CustomMapping and scoring projection
-private sealed class CondMapIn  { public string Conditions_Csv { get; set; } = ""; }
-private sealed class CondMapOut { public float  CondFlag       { get; set; } }
+    // Public DTOs so ML.NET can reflect them at runtime
+    public sealed class CondMapIn  { public string? Conditions_Csv { get; set; } }
+    public sealed class CondMapOut { public float  CondFlag       { get; set; } }
 
     private static IEnumerable<EligibilityInputLabeled> LoadEligibilityRows(string conn)
     {

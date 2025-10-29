@@ -4,6 +4,7 @@ using Microsoft.Extensions.ML;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Becs.ML;
+using Microsoft.ML;
 
 namespace Becs.Services;
 
@@ -11,22 +12,23 @@ public class AiService
 {
     // ⬅️ Two pools, one per model
     private readonly PredictionEnginePool<DemandInput, DemandOutput> _demandPool;
-    private readonly PredictionEnginePool<EligibilityInput, EligibilityOutput> _eligPool;
+    private readonly PredictionEngine<EligibilityInput, EligibilityOutput> _eligEngine;
 
     private readonly ILogger<AiService> _logger;
     private readonly IConfiguration _cfg;
 
     public AiService(
         PredictionEnginePool<DemandInput, DemandOutput> demandPool,
-        PredictionEnginePool<EligibilityInput, EligibilityOutput> eligPool,
+        PredictionEngine<EligibilityInput, EligibilityOutput> eligEngine,
         ILogger<AiService> logger,
         IConfiguration cfg)
     {
         _demandPool = demandPool;
-        _eligPool   = eligPool;
+        _eligEngine = eligEngine;
         _logger     = logger;
         _cfg        = cfg;
     }
+    
 
     private string ConnStr => _cfg.GetConnectionString("DefaultConnection") ?? "Data Source=/data/becs.db";
 
@@ -107,10 +109,9 @@ LIMIT 1;";
             Bp_Diastolic = bpDia,
             Days_Since_Last_Donation = daysSinceLast,
             Conditions_Csv = string.Join(',', conditions)
-            
         };
 
-        var pred = _eligPool.Predict("EligibilityModel", input);   // ⬅️ use eligibility pool
+        var pred = _eligEngine.Predict(input); // <-- use engine directly
 
         var eligible = pred.EligiblePred > 0.5f;
         var why = string.IsNullOrWhiteSpace(pred.Explanation) ? "Model decision." : pred.Explanation;
