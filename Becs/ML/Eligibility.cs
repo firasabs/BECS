@@ -1,3 +1,5 @@
+using Microsoft.ML.Data;
+
 namespace Becs.ML;
 
 public class EligibilityInput
@@ -12,7 +14,11 @@ public class EligibilityInput
 
 public class EligibilityOutput
 {
-    public float EligiblePred { get; set; }      // probability (0..1) or score
-    public string? Explanation { get; set; }     // if you attach it (e.g., from a custom transformer)
-    public string? ModelVersion { get; set; }
+    [ColumnName("PredictedLabel")]
+    public bool PredictedLabel { get; set; }
+
+    // Present for most binary classifiers
+    public float Probability { get; set; }
+
+    public float Score { get; set; }
 }

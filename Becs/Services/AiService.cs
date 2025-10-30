@@ -12,19 +12,19 @@ public class AiService
 {
     // ⬅️ Two pools, one per model
     private readonly PredictionEnginePool<DemandInput, DemandOutput> _demandPool;
-    private readonly PredictionEngine<EligibilityInput, EligibilityOutput> _eligEngine;
+    private readonly PredictionEnginePool<EligibilityInput, EligibilityOutput> _eligPool;
 
     private readonly ILogger<AiService> _logger;
     private readonly IConfiguration _cfg;
 
     public AiService(
         PredictionEnginePool<DemandInput, DemandOutput> demandPool,
-        PredictionEngine<EligibilityInput, EligibilityOutput> eligEngine,
+        PredictionEnginePool<EligibilityInput, EligibilityOutput> eligPool,
         ILogger<AiService> logger,
         IConfiguration cfg)
     {
         _demandPool = demandPool;
-        _eligEngine = eligEngine;
+        _eligPool = eligPool;
         _logger     = logger;
         _cfg        = cfg;
     }
@@ -110,11 +110,18 @@ LIMIT 1;";
             Days_Since_Last_Donation = daysSinceLast,
             Conditions_Csv = string.Join(',', conditions)
         };
+        var pred = _eligPool.Predict("EligibilityModel", input);
+        var threshold = 0.455f;
+        var eligible = pred.Probability >= threshold;
+        var proba = pred.Probability; 
+        var why = "Model decision.";
+        var ver = "EligibilityModel";       
+        return (eligible, proba, ver, why);
 
-        var pred = _eligEngine.Predict(input); // <-- use engine directly
-
-        var eligible = pred.EligiblePred > 0.5f;
-        var why = string.IsNullOrWhiteSpace(pred.Explanation) ? "Model decision." : pred.Explanation;
-        return (eligible, pred.EligiblePred, pred.ModelVersion ?? "EligibilityModel", why);
     }
+    
+    public EligibilityOutput CheckEligibility(EligibilityInput input)
+    {
+        var output = _eligPool.Predict(input);
+        return output;    }
 }
