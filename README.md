@@ -1,39 +1,57 @@
-# 🩸 BECS – Part 3  
+# 🩸 BECS
 **Blood Establishment Computer Software (BECS) with HIPAA & Part 11 Compliance**  
 
-This is **Part 3** of the BECS project. In this phase, the system is extended to include:  
 
-- **User authentication & roles** (Admin, User, Researcher).  
-- **HIPAA compliance** for Protected Health Information (PHI).  
-- **De-identified data views** for researchers.  
-- **Full support for FDA Part 11 audit trail** (tamper-evident logs with chained hashes).  
-- **Dockerized deployment** for portability.  
+**BECS** (Blood Establishment Computer Software) is a .NET-based web application designed to manage and automate critical workflows within blood banks while maintaining compliance with **HIPAA** and **FDA 21 CFR Part 11** standards.
+
+The system enables hospitals, laboratories, and research institutions to:
+- Record blood donations and issue blood units.
+- Maintain an auditable, tamper-evident record of every action.
+- Enforce role-based access to protect patient and donor privacy.
+- Support researchers with **de-identified datasets**.
+- Integrate **AI models** to forecast blood demand and evaluate donor eligibility.
 
 ---
 
-## 🚀 Features
+## 🧩 Main Features
 
-### ✅ Authentication & Roles
-- **Login/Logout** with secure password storage (SHA-256 + unique salt).  
-- **Admin**:  
-  - Manage all users (create new accounts).  
-  - Full access to donations, issues, audit metadata.  
-- **User (Blood Bank Staff)**:  
-  - Record blood donations.  
-  - Issue blood units (routine/emergency).  
-- **Researcher (Student)**:  
-  - Read-only access to de-identified inventory via `ResearcherView`.  
-  - Cannot view personal donor info (name, ID, address).
+### 🔐 **Secure Authentication & Role Management**
+- SHA-256 + per-user salted password encryption.
+- Roles:
+  - **Admin** – Full system control: manage users, donations, issues, and audit trails.  
+  - **Staff** – Authorized to record donations and issue blood units.  
+  - **Researcher** – Read-only access to de-identified data for research purposes.
 
-### ✅ HIPAA Compliance
-- All PHI fields (name, ID, etc.) restricted to **admin/staff only**.  
-- Researchers only see anonymized data (`ABO`, `Rh`, `DonationDate`, `Status`, `Source`).  
+### 🧾 **FDA Part 11 Audit Trail**
+- All user actions (login, logout, data insert, issue, etc.) are logged.
+- Each log record contains:
+  - Timestamp, user, action type, and request metadata.
+  - A **cryptographic chain hash** using `prev_hash + pepper` → tamper-evident structure.
+- Enables complete traceability and accountability.
 
-### ✅ Part 11 Audit Trail
-- Every action (login, logout, donation, issue, query) logged in `audit_logs`.  
-- Logs include timestamp, user, action, request metadata, and cryptographic chain hash.  
-- Tamper-evident: each log stores `prev_hash + pepper` to form a verifiable chain.  
+### 🩸 **HIPAA Compliance**
+- Protects **PHI** (Protected Health Information) using strict access control.
+- Researchers can only view **de-identified data** such as:
+  - Blood type (ABO/Rh)
+  - Donation date
+  - Status and source  
+  _(Names, IDs, and addresses are hidden.)_
 
+### 🤖 **AI-Powered Decision Support**
+Two machine learning modules integrated via **ML.NET**:
+
+#### 1. **Donor Eligibility Model**
+Predicts whether a donor is eligible based on:
+- Hemoglobin level  
+- Age  
+- Blood pressure (Systolic/Diastolic)  
+- Days since last donation  
+- Medical conditions
+#### 2. **Demand Forecasting**
+Predicts the expected monthly demand for blood units by type and Rh factor.- Hemoglobin level  
+- Forecast view grouped by month and blood type.  
+- Displays predicted units and total per group. 
+- Color coded indicators for high/low demand months.
 ---
 ## Prerequisites
 
@@ -70,9 +88,11 @@ touch becs.db
 Run the container while mapping the host database file into the container’s writable `/data` directory:
 
 ```bash
-docker run -e ASPNETCORE_ENVIRONMENT=Development \
+docker run --name becs \
+  -e ASPNETCORE_ENVIRONMENT=Development \
   -p 5080:8080 \
   -v "$(pwd)/becs.db:/data/becs.db" \
+  -v "$(pwd)/MLModels:/MLModels:ro" \
   becs
 ```
 
