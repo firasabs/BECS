@@ -111,7 +111,7 @@ LIMIT 1;";
             Conditions_Csv = string.Join(',', conditions)
         };
         var pred = _eligPool.Predict("EligibilityModel", input);
-        var threshold = 0.455f;
+        var threshold = 0.5f;
         var eligible = pred.Probability >= threshold;
         var proba = pred.Probability; 
         var why = "Model decision.";

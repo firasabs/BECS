@@ -17,12 +17,19 @@ FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Copy default ML models into the image (can be overridden by a bind mount)
+COPY MLModels /app/MLModels
+
 # run as non-root
 USER app
 
 # environment
 ENV ConnectionStrings__DefaultConnection="Data Source=/data/becs.db"
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
+
+# Point the app to model paths (overridable at runtime)
+ENV Models__Demand="/MLModels/demandModel.zip"
+ENV Models__Eligibility="/MLModels/eligibilityModel.zip"
 
 # (optional) EXPOSE for clarity in local testing
 EXPOSE 8080
